@@ -59,28 +59,6 @@ Controle de materiais e produtos disponíveis no estoque.
 | `created_at`   | TIMESTAMP       | Data de criação                                |
 | `updated_at`   | TIMESTAMP       | Última atualização                             |
 
-## Endpoints da API
-
-### 1. `POST /post-produto`
-Adiciona um novo produto ao sistema.
-
-### 2. `POST /post-residuo`
-Registra um novo resíduo no banco de dados.
-
-### 3. `GET /get-financeiro`
-Consulta transações financeiras com filtros opcionais:
-- `categoriaId`
-- `tipoFinanceiro`
-- `metodo_pagamento`
-- `data`
-
-### 4. `POST /get-estoque`
-Consulta os dados de estoque com base nos filtros fornecidos:
-- `id`
-- `fornecedor`
-- `data`
-- `type` (entrada/saída)
-
 ## Instalação e Configuração
 
 1. Clone o repositório:
