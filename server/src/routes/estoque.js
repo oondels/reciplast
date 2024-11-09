@@ -51,12 +51,40 @@ router.post("/post-material", async (req, res, next) => {
       user_id,
     } = req.body;
 
+    const queryMaterial = await pool.query(
+      `
+			SELECT * FROM reciplast.produtos
+			WHERE id = $1	
+		`,
+      [material_id]
+    );
+
+    // Atualizar financeiro
+    const attFinance = async (tipo, produto, valor) => {
+      let descricao = `${tipo === "compra" ? "Compra" : "Venda"} de ${produto.nome} `;
+      let query = `
+				INSERT INTO reciplast.financeiro (descricao, valor, data, user_create, user_id, metodo_pagamento, tipo, categoria_id)
+				VALUES ($1, $2, $3, $4, $5, 'PIX', '${tipo === "compra" ? "despesa" : "receita"}', ${
+        produto.type === "materia-prima" ? 2 : 1
+      })
+				RETURNING *
+			`;
+
+      const postFinance = await pool.query(query, [descricao, valor, data, username, user_id]);
+      if (postFinance.rows.length === 0) {
+        return res.status(400).json({ message: "Erro ao atualizar estoque. Tente novamente." });
+      }
+    };
+
     let total_custo;
     if (custo_compra) {
       total_custo = custo_compra * quantidade;
+      attFinance("compra", queryMaterial.rows[0], total_custo);
     }
+
     if (custo_venda) {
       total_custo = custo_venda * quantidade;
+      attFinance("venda", queryMaterial.rows[0], total_custo);
     }
 
     const postMaterial = await pool.query(

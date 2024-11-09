@@ -62,4 +62,38 @@ router.get("/get-financeiro", async (req, res, next) => {
   }
 });
 
+router.post("/post-financeiro", async (req, res, next) => {
+  try {
+    const { tipo, categoria_id, descricao, valor, data, metodo_pagamento, user_create, user_id } =
+      req.body;
+
+    let query = `
+		INSERT INTO reciplast.financeiro (tipo, categoria_id, descricao, valor, data, metodo_pagamento, user_create, user_id)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING *
+		`;
+
+    const postFinance = await pool.query(query, [
+      tipo,
+      categoria_id,
+      descricao,
+      valor,
+      data,
+      metodo_pagamento,
+      user_create,
+      user_id,
+    ]);
+
+    if (postFinance.rows.length === 0) {
+      return res.status(400).json({
+        message: "Erro ao atualizar financeiro. Verifique as informações e tente novamente.",
+      });
+    }
+
+    return res.status(201).json({ message: "Financeiro atualizado com sucesso!" });
+  } catch (error) {
+    next(error);		
+  }
+});
+
 export default router;
