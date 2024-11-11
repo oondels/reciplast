@@ -3,6 +3,7 @@ import pool from "../config/db/connection.js";
 
 const router = Router();
 
+// Estoque de Material
 router.get("/get-estoque", async (req, res, next) => {
   try {
     const id = req.query.id;
@@ -34,7 +35,6 @@ router.get("/get-estoque", async (req, res, next) => {
   }
 });
 
-// Estoque de Material
 router.post("/post-material", async (req, res, next) => {
   try {
     let {

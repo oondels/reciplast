@@ -1,26 +1,33 @@
 <template>
-  <div class="home">
-    <header class="header">
-      <h1>{{ company.name }}</h1>
-      <p>{{ company.description }}</p>
-    </header>
+<div class="home">
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Bem-vindo à Reciplast</h1>
+        <p>Líder em reciclagem e fabricação de sacolas sustentáveis.</p>
+        <button class="cta-button">Saiba Mais</button>
+      </div>
+    </section>
 
-    <section class="details">
-      <div class="detail">
+    <section class="about-section">
+      <div class="info-card">
+        <i class="icon mdi mdi-map-marker"></i>
         <h3>Localidade</h3>
-        <p>{{ company.location }}</p>
+        <p>Santo Estêvão, Bahia, Brasil</p>
       </div>
-      <div class="detail">
+      <div class="info-card">
+        <i class="icon mdi mdi-calendar"></i>
         <h3>Fundação</h3>
-        <p>{{ company.foundation }}</p>
+        <p>Fundada em 2010</p>
       </div>
-      <div class="detail">
+      <div class="info-card">
+        <i class="icon mdi mdi-leaf"></i>
         <h3>Missão</h3>
-        <p>{{ company.mission }}</p>
+        <p>Promover a sustentabilidade por meio da reciclagem e da produção de sacolas de qualidade.</p>
       </div>
-      <div class="detail">
+      <div class="info-card">
+        <i class="icon mdi mdi-heart"></i>
         <h3>Valores</h3>
-        <p>{{ company.values }}</p>
+        <p>Respeito ao meio ambiente, inovação e compromisso social.</p>
       </div>
     </section>
   </div>
@@ -45,54 +52,83 @@ export default {
 </script>
 
 <style scoped>
+/* Estilos principais */
 .home {
-	height: 100vh;
   font-family: Arial, sans-serif;
-  color: #3c763d;
-  padding: 20px;
+  color: #2f4f2f;
 }
 
-.header {
+/* Hero Section */
+.hero {
+  background-color: #eaf6e9;
   text-align: center;
-  color: #2f5e2f;
+  padding: 60px 20px;
 }
 
-.header h1 {
-  font-size: 2.5em;
-  color: #1d4f1d;
+.hero-content h1 {
+  font-size: 3em;
+  color: #1f5e1f;
 }
 
-.header p {
-  font-size: 1.2em;
-  margin-top: 10px;
+.hero-content p {
+  font-size: 1.5em;
   color: #3b643b;
+  margin: 20px 0;
 }
 
-.details {
+.cta-button {
+  padding: 10px 20px;
+  font-size: 1.2em;
+  color: white;
+  background-color: #1f5e1f;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+  background-color: #176d17;
+}
+
+/* About Section */
+.about-section {
   display: flex;
   flex-wrap: wrap;
   gap: 20px;
-  margin-top: 30px;
   justify-content: center;
+  padding: 40px 20px;
+  background-color: #f0fbf0;
 }
 
-.detail {
-  background-color: #d7f2d6;
-  padding: 15px 20px;
-  border-radius: 8px;
+.info-card {
+  background-color: #d9f5d9;
+  padding: 20px;
+  border-radius: 10px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   width: 220px;
   text-align: center;
+  transition: transform 0.3s;
 }
 
-.detail h3 {
-  font-size: 1.4em;
-  color: #1f4f1f;
-  margin-bottom: 5px;
+.info-card:hover {
+  transform: scale(1.05);
 }
 
-.detail p {
-  font-size: 1.1em;
+.info-card h3 {
+  font-size: 1.3em;
+  color: #1f5e1f;
+  margin-top: 10px;
+}
+
+.info-card p {
+  font-size: 1em;
   color: #3c763d;
+}
+
+/* Icones */
+.icon {
+  font-size: 2.5em;
+  color: #3b643b;
 }
 </style>

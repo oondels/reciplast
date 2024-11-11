@@ -1,11 +1,17 @@
+import DashBoard from '@/views/DashBoard.vue'
+import HomeView from '@/views/HomeView.vue'
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
 
 const routes = [
   {
     path: '/',
-    name: 'home',
+    name: 'Início',
     component: HomeView
+  },
+  {
+    path: '/dashboard',
+    name: 'Gerenciamento',
+    component: DashBoard
   }
 ]
 
