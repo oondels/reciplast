@@ -3,6 +3,21 @@ import pool from "../config/db/connection.js";
 
 const router = Router();
 
+const meses = {
+  1: "Janeiro",
+  2: "Fevereiro",
+  3: "Março",
+  4: "Abril",
+  5: "Maio",
+  6: "Junho",
+  7: "Julho",
+  8: "Agosto",
+  9: "Setembro",
+  10: "Outubro",
+  11: "Novembro",
+  12: "Dezembro",
+};
+
 // Estoque Geral dos Materiais
 router.get("/estoqueGeral-chart-data", async (req, res, next) => {
   try {
@@ -99,6 +114,9 @@ router.get("/stock-history/:materialId", async (req, res, next) => {
       chart: {
         id: "estoque-detalhado",
       },
+      dataLabels: {
+        enabled: true,
+      },
       stroke: {
         curve: "smooth",
       },
@@ -143,7 +161,7 @@ router.get("/stock-history/:materialId", async (req, res, next) => {
   }
 });
 
-// Despesas
+// Financeiro
 router.get("/general-expenses", async (req, res, next) => {
   try {
     const query = `
@@ -254,13 +272,218 @@ router.get("/detailed-expenses", async (req, res, next) => {
       chartSeriesReceita[index] = Number(data.valor);
     });
 
+    return res.status(200).json({
+      optionsDespesa: chartOptions,
+      seriesDespesa: chartSeries,
+      optionsReceita: chartOptionsReceita,
+      seriesReceita: chartSeriesReceita,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Gráfico de Linha de Receita e Despesa Mensal
+router.get("/expenses-history", async (req, res, next) => {
+  try {
+    const query = await pool.query(`
+		SELECT
+			tipo, SUM(valor) as valor_total_mes, EXTRACT(MONTH FROM data) as mes
+		FROM
+			reciplast.financeiro
+		GROUP BY
+			tipo, EXTRACT(MONTH FROM data)
+		ORDER BY
+			mes ASC
+		`);
+
+    let chartOptions = {
+      chart: {
+        id: "sell-history",
+      },
+      dataLabels: {
+        enabled: true,
+      },
+      stroke: {
+        curve: "smooth",
+      },
+      xaxis: {
+        categories: [],
+      },
+    };
+
+    const chartSeries = [
+      {
+        name: "Receita",
+        data: [],
+      },
+      {
+        name: "Despesa",
+        data: [],
+      },
+    ];
+
+    query.rows.forEach((result) => {
+      if (!chartOptions.xaxis.categories.includes(meses[result.mes])) {
+        chartOptions.xaxis.categories.push(meses[result.mes]);
+      }
+
+      const dataIndex = chartOptions.xaxis.categories.indexOf(meses[result.mes]);
+
+      if (result.tipo === "receita") {
+        chartSeries[0].data[dataIndex] = Number(result.valor_total_mes);
+      } else if (result.tipo === "despesa") {
+        chartSeries[1].data[dataIndex] = Number(result.valor_total_mes);
+      }
+    });
+
+    return res.status(200).json({ options: chartOptions, series: chartSeries, result: query.rows });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Detalhamento de vendas/produto
+router.get("/detailed-sell-history", async (req, res, next) => {
+  try {
+    const query = await pool.query(`
+			SELECT 
+				SUM(e.total_custo) as valor, EXTRACT(MONTH FROM e.data) as mes, 
+				e.saida, p.nome
+			FROM
+				reciplast.estoque e
+			LEFT JOIN
+				reciplast.produtos p ON e.material_id = p.id
+			WHERE
+				EXTRACT(YEAR FROM e.data) = EXTRACT(YEAR FROM CURRENT_DATE) AND
+				e.material_id = 3 OR e.material_id = 4
+			GROUP BY
+				EXTRACT(MONTH FROM e.data), e.saida, p.nome
+			ORDER BY
+				mes ASC
+		`);
+
+    let chartOptions = {
+      chart: {
+        id: "detailed-expense-history",
+      },
+      xaxis: {
+        categories: [],
+      },
+    };
+
+    const chartSeries = [];
+
+    query.rows.forEach((result) => {
+      let indexProduct;
+
+      if (chartSeries.findIndex((item) => item.name === result.nome) === -1) {
+        chartSeries.push({
+          name: result.nome,
+          data: Array(chartOptions.xaxis.categories.length).fill(0), // Inicializa os dados com 0 até o índice atual
+        });
+      }
+
+      indexProduct = chartSeries.findIndex((item) => item.name === result.nome);
+
+      if (chartOptions.xaxis.categories.indexOf(meses[result.mes]) === -1) {
+        chartOptions.xaxis.categories.push(meses[result.mes]);
+
+        // Adicionar 0 para todos os produtos na série para o novo mês
+        chartSeries.forEach((item) => {
+          item.data.push(0);
+        });
+      }
+
+      // Atualizar o valor do produto para o mês específico
+      const monthIndex = chartOptions.xaxis.categories.indexOf(meses[result.mes]);
+      chartSeries[indexProduct].data[monthIndex] = Number(result.valor);
+    });
+
+    return res.status(200).json({ options: chartOptions, series: chartSeries, result: query.rows });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Produção de Sacolas e Grãos
+router.get("/production-history", async (req, res, next) => {
+  try {
+    const query = await pool.query(`
+			SELECT 
+				p.nome, SUM(e.quantidade) as total_quantidade, EXTRACT(MONTH FROM e.data) as mes
+			FROM 
+				reciplast.produtos p
+			LEFT JOIN 	
+				reciplast.estoque e ON p.id = e.material_id
+			WHERE
+				p.type = 'produto-final' AND EXTRACT(YEAR FROM e.data) = EXTRACT(YEAR FROM CURRENT_DATE)
+			GROUP BY
+				p.nome, EXTRACT(MONTH FROM e.data)
+			ORDER BY	
+				mes ASC
+		`);
+
+    // Grafico Pizza
+    let donutOptions = {
+      chart: {
+        id: "production-donut-chart",
+      },
+      labels: [],
+    };
+
+    const donutSeries = [];
+
+    // Gráfico de Barras
+    let chartOptions = {
+      chart: {
+        id: "detailed-expense-history",
+      },
+      xaxis: {
+        categories: [],
+      },
+    };
+
+    const chartSeries = [];
+
+    query.rows.forEach((result) => {
+      let indexProduct;
+
+      if (chartSeries.findIndex((item) => item.name === result.nome) === -1) {
+        chartSeries.push({
+          name: result.nome,
+          data: Array(chartOptions.xaxis.categories.length).fill(0), // Inicializa os dados com 0 até o índice atual
+        });
+      }
+
+      indexProduct = chartSeries.findIndex((item) => item.name === result.nome);
+
+      if (chartOptions.xaxis.categories.indexOf(meses[result.mes]) === -1) {
+        chartOptions.xaxis.categories.push(meses[result.mes]);
+
+        // Adicionar 0 para todos os produtos na série para o novo mês
+        chartSeries.forEach((item) => {
+          item.data.push(0);
+        });
+      }
+
+      // Atualizar o valor do produto para o mês específico
+      const monthIndex = chartOptions.xaxis.categories.indexOf(meses[result.mes]);
+      chartSeries[indexProduct].data[monthIndex] = Number(result.total_quantidade);
+    });
+
+    // Preenchendo gráfico de pizza
+    chartSeries.forEach((serie, index) => {
+      donutOptions.labels[index] = serie.name;
+      donutSeries[index] = serie.data.reduce((acc, curr) => acc + curr);
+    });
+
     return res
       .status(200)
       .json({
-        optionsDespesa: chartOptions,
-        seriesDespesa: chartSeries,
-        optionsReceita: chartOptionsReceita,
-        seriesReceita: chartSeriesReceita,
+        options: chartOptions,
+        series: chartSeries,
+        donut: { options: donutOptions, series: donutSeries },
       });
   } catch (error) {
     next(error);

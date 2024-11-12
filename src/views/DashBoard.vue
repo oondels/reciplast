@@ -1,13 +1,43 @@
 <template>
   <div class="dashboard-container">
-    <h1 class="text-center">DashBoard de Gerenciamento</h1>
+    <h1 class="text-center space">DashBoard de Gerenciamento</h1>
 
     <div class="charts-container">
-      <div class="min-charts">
+      <h3 class="dashboard-title">Produção Mensal</h3>
+      <div class="min-charts space">
+        <div class="chart-item">
+          <div class="production-card">
+            <div class="icon">
+              <i class="mdi mdi-shopping fs-5"></i>
+            </div>
+            <div class="details">
+              <h3>Produção de Sacolas</h3>
+              <p class="quantity">50 <span class="label">Fardos Produzidos</span></p>
+							<p class="sub-info">Meta: 80 fardos</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-item">
+          <div class="production-card">
+            <div class="icon">
+              <i class="mdi mdi-grain fs-5"></i>
+            </div>
+            <div class="details">
+              <h3>Produção de Grão</h3>
+              <p class="quantity">75 <span class="label">Fardos Produzidos</span></p>
+              <p class="sub-info">Meta: 80 fardos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h4 class="dashboard-title">Armazenamento Geral</h4>
+      <div class="min-charts space">
         <div
           v-for="(material, materialIndex) in estoqueIndividual"
           :key="materialIndex"
-          class="chart-item col"
+          class="chart-item chart-item-details col"
           role="button"
         >
           <v-dialog max-width="700">
@@ -28,8 +58,6 @@
 
                 <div class="text-center" v-if="estoqueIndividual">
                   {{ individualQuantidade(material.nome).quantidade }} Kg
-
-                  <span>add grafico crítico</span>
                 </div>
               </div>
             </template>
@@ -64,6 +92,10 @@
         </div>
       </div>
 
+      <v-divider :thickness="2" class="border-opacity-25" color="success"></v-divider>
+
+      <h4 class="dashboard-title space">Análise Geral</h4>
+      <!-- Estoque e Finance Donut -->
       <div class="charts">
         <!-- Estoque -->
         <div class="chart-item">
@@ -77,7 +109,7 @@
           </div>
         </div>
 
-        <div role="button" class="chart-item">
+        <div role="button" class="chart-item chart-item-details">
           <v-dialog max-width="700">
             <template v-slot:activator="{ props: activatorProps }">
               <div v-bind="activatorProps" @click="detailedExpenses">
@@ -104,12 +136,27 @@
             <template v-slot:default="{ isActive }">
               <v-card title="Receita X Despesa - Detalhado">
                 <v-card-text>
-									<div v-if="detailedExpensesData && detailedExpensesData.optionsReceita && detailedExpensesData.seriesReceita">
-										<ApexCharts type="donut" :options="detailedExpensesData.optionsDespesa" :series="detailedExpensesData.seriesDespesa" />
-
-									<ApexCharts type="donut" :options="detailedExpensesData.optionsReceita" :series="detailedExpensesData.seriesReceita" />
-									</div>
-								</v-card-text>
+                  <div
+                    v-if="
+                      detailedExpensesData &&
+                      detailedExpensesData.optionsReceita &&
+                      detailedExpensesData.seriesReceita
+                    "
+                  >
+                    <h4 class="text-center">Detalhamento de Despesas</h4>
+                    <ApexCharts
+                      type="donut"
+                      :options="detailedExpensesData.optionsDespesa"
+                      :series="detailedExpensesData.seriesDespesa"
+                    />
+                    <h4 class="text-center">Detalhamento de Receita</h4>
+                    <ApexCharts
+                      type="donut"
+                      :options="detailedExpensesData.optionsReceita"
+                      :series="detailedExpensesData.seriesReceita"
+                    />
+                  </div>
+                </v-card-text>
 
                 <v-card-actions>
                   <v-spacer></v-spacer>
@@ -124,8 +171,110 @@
             </template>
           </v-dialog>
         </div>
+      </div>
 
-        <div class="chart-item"></div>
+      <!-- Despesa X Receita - Por Mês -->
+      <div class="charts">
+        <v-dialog max-width="700">
+          <template v-slot:activator="{ props: activatorProps }">
+            <div
+              v-bind="activatorProps"
+              role="button"
+              @click="detailedSellHistory"
+              v-if="
+                expensesHistoryData && expensesHistoryData.options && expensesHistoryData.series
+              "
+              class="chart-item chart-item-details d-flex flex-column justify-content-center align-items-center"
+            >
+              <span class="d-flex flex-row justify-content-between align-items-center">
+                <i class="mdi mdi-currency-usd fs-4 text-primary"></i>
+                <h4>Despesa X Receita - Por Mês R$</h4>
+              </span>
+
+              <ApexCharts
+                type="area"
+                width="700"
+                :options="expensesHistoryData.options"
+                :series="expensesHistoryData.series"
+              />
+            </div>
+          </template>
+
+          <template v-slot:default="{ isActive }">
+            <v-card>
+              <!-- Colocar ícone -->
+              <v-card-title>
+                <span class="d-flex flex-row justify-content-center align-items-center">
+                  <i class="mdi mdi-currency-usd fs-2 text-primary"></i>
+                  <h4>Vendas de Produtos (R$)</h4>
+                </span>
+              </v-card-title>
+              <v-card-text>
+                <div
+                  v-if="
+                    detailedSellHistoryData &&
+                    detailedSellHistoryData.options &&
+                    detailedSellHistoryData.series
+                  "
+                >
+                  <ApexCharts
+                    type="bar"
+                    :options="detailedSellHistoryData.options"
+                    :series="detailedSellHistoryData.series"
+                  />
+                </div>
+              </v-card-text>
+
+              <v-card-actions>
+                <v-spacer></v-spacer>
+
+                <v-btn
+                  text="Fechar"
+                  variant="outlined"
+                  color="danger"
+                  @click="isActive.value = false"
+                ></v-btn>
+              </v-card-actions>
+            </v-card>
+          </template>
+        </v-dialog>
+      </div>
+
+      <!-- Fabricação Sacola e Grão (Kg) -->
+      <div class="charts">
+        <div class="chart-item">
+          <span class="d-flex flex-row justify-content-between align-items-center">
+            <i class="mdi mdi-factory fs-4 text-primary"></i>
+            <h4>Fabricação de Sacolas e Grão (Kg)</h4>
+          </span>
+
+          <div
+            v-if="
+              productionHistoryData && productionHistoryData.options && productionHistoryData.series
+            "
+          >
+            <ApexChart
+              type="bar"
+              :options="productionHistoryData.options"
+              :series="productionHistoryData.series"
+            />
+          </div>
+        </div>
+
+        <div class="chart-item">
+          <span class="d-flex flex-row justify-content-between align-items-center">
+            <i class="mdi mdi-factory fs-4 text-primary"></i>
+            <h4>Sacolas X Grão (Kg)</h4>
+          </span>
+
+          <div v-if="productionHistoryData && productionHistoryData.donut">
+            <ApexChart
+              type="donut"
+              :options="productionHistoryData.donut.options"
+              :series="productionHistoryData.donut.series"
+            />
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -174,7 +323,11 @@ export default {
       detailedStockHistory: null,
 
       generalExpensesData: null,
-			detailedExpensesData: null,
+      detailedExpensesData: null,
+      expensesHistoryData: null,
+      detailedSellHistoryData: null,
+
+      productionHistoryData: null,
 
       materialIcon: {
         Plástico: "mdi mdi-recycle fs-5",
@@ -189,6 +342,8 @@ export default {
     this.getEstoqueGeral();
     this.getEstoqueIndividual();
     this.generalExpenses();
+    this.expensesHistory();
+    this.productionHistory();
   },
   methods: {
     getEstoqueGeral() {
@@ -234,23 +389,56 @@ export default {
         .get(`${ip}/chart/general-expenses`)
         .then((response) => {
           this.generalExpensesData = response.data;
-          console.log(this.generalExpensesData.options);
         })
         .catch((error) => {
           console.error("Erro ao buscar dados gerais de despesas: ", error);
         });
     },
 
-		detailedExpenses() {
-			axios
-				.get(`${ip}/chart/detailed-expenses`)
-				.then((response) => {
-					this.detailedExpensesData = response.data;
-				})
-				.catch((error) => {
-					console.error("Erro ao buscar dados detalhados de despesas: ", error);
-				});
-		},
+    detailedExpenses() {
+      axios
+        .get(`${ip}/chart/detailed-expenses`)
+        .then((response) => {
+          this.detailedExpensesData = response.data;
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar dados detalhados de despesas: ", error);
+        });
+    },
+
+    expensesHistory() {
+      axios
+        .get(`${ip}/chart/expenses-history`)
+        .then((response) => {
+          this.expensesHistoryData = response.data;
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar dados detalhados de despesas: ", error);
+        });
+    },
+
+    detailedSellHistory() {
+      axios
+        .get(`${ip}/chart/detailed-sell-history`)
+        .then((response) => {
+          this.detailedSellHistoryData = response.data;
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar dados detalhados de vendas: ", error);
+        });
+    },
+
+    productionHistory() {
+      axios
+        .get(`${ip}/chart/production-history`)
+        .then((response) => {
+          this.productionHistoryData = response.data;
+          console.log(this.productionHistoryData);
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar dados de produção: ", error);
+        });
+    },
 
     individualQuantidade(material) {
       const estoque = this.estoqueIndividual.find((estoque) => estoque.nome === material);
@@ -264,6 +452,25 @@ export default {
 .dashboard-container {
   height: 100vh;
   padding: 10px;
+}
+
+.dashboard-title {
+  font-size: 2em;
+  color: #2f4f2f;
+  text-align: center;
+  margin: 20px 0;
+  font-weight: bold;
+  position: relative;
+}
+
+.dashboard-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background-color: #66bb6a;
+  margin: 8px auto 0;
+  border-radius: 5px;
 }
 
 .charts-container {
@@ -291,8 +498,12 @@ export default {
 }
 
 .chart-item:hover {
-  background-color: #dbff7d;
-  box-shadow: 0 1rem 1.5rem rgba(68, 71, 90, 0.18);
+  box-shadow: 0 0.5rem 1rem rgba(68, 71, 90, 0.18);
+}
+
+.chart-item-details:hover {
+  background-color: #ddece5;
+  box-shadow: 0 0.5rem 1rem rgba(68, 71, 90, 0.18);
 }
 
 .min-charts {
@@ -311,5 +522,51 @@ export default {
   padding: 5px 9px;
   border-radius: 50%;
   background-color: #5fdaa2;
+}
+
+.production-card {
+  display: flex;
+  align-items: center;
+  background-color: #f3f4f6;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.icon {
+  background-color: #66bb6a;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+}
+
+.details h3 {
+  font-size: 1.2em;
+  margin: 0;
+  color: #374151;
+}
+
+.quantity {
+  font-size: 1.8em;
+  color: #2f855a;
+  margin: 5px 0;
+}
+
+.label {
+  font-size: 0.8em;
+  color: #374151;
+}
+
+.sub-info {
+  font-size: 0.9em;
+  color: #6b7280;
+}
+
+.space {
+  margin-bottom: 50px;
 }
 </style>
