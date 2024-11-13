@@ -35,7 +35,46 @@ router.get("/get-estoque", async (req, res, next) => {
   }
 });
 
-router.post("/post-material", async (req, res, next) => {
+// Produtos em Estoque e Quantidade
+router.get("/get-produtos", async (req, res, next) => {
+	try {
+		const query = await pool.query(`
+			SELECT 
+				p.nome, p.id, p.type, SUM(CASE WHEN e.entrada = true THEN e.quantidade ELSE 0 END) - 
+				SUM(CASE WHEN e.saida = true THEN e.quantidade ELSE 0 END) AS quantidade
+			FROM
+				reciplast.produtos p
+			LEFT JOIN
+				reciplast.estoque e ON p.id = e.material_id
+			GROUP BY
+				p.nome, p.id, p.type
+			`);
+
+		return res.status(200).json(query.rows);
+	} catch (error) {
+		next(error)
+	}
+})
+
+router.get("/get-produto-producao", async (req, res, next) => {
+	try {
+		const query = await pool.query(`
+			SELECT
+				p.nome, p.id, p.type
+			FROM 
+				reciplast.produtos p
+			WHERE
+				p.type = 'produto-final'
+		`)
+
+		return res.status(200).json(query.rows)
+	} catch (error) {
+		next(error)
+		
+	}
+})
+
+router.post("/post-produto-estoque", async (req, res, next) => {
   try {
     let {
       material_id,
@@ -197,6 +236,53 @@ router.post("/post-produto", async (req, res, next) => {
     }
 
     res.status(201).json(insertProduto.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+});
+
+// Fardos por Produto
+router.get("/fardo-produto/:id", async (req, res, next) => {
+  try {
+    const id = req.params.id;
+
+    const query = await pool.query(
+      `
+				SELECT 
+					producao::TEXT[] 
+				FROM 
+					reciplast.produtos 
+				WHERE
+					id = $1
+			`,
+      [id]
+    );
+    return res.status(200).json(query.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.put("/fardo-produto/:id", async (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const novosFardos = JSON.parse(req.query.fardos);
+
+    const query = await pool.query(
+      `
+			UPDATE reciplast.produtos
+			SET producao = $1
+			WHERE id = $2
+			RETURNING *
+		`,
+      [novosFardos, id]
+    );
+
+    if (query.rows.length === 0) {
+      return res.status(400).json({ message: "Erro ao atualizar fardos. Tente novamente." });
+    }
+
+    return res.status(200).json({message: "Fardos atualizados com sucesso."});
   } catch (error) {
     next(error);
   }
