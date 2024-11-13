@@ -1,5 +1,6 @@
 import DashBoard from '@/views/DashBoard.vue'
 import HomeView from '@/views/HomeView.vue'
+import RegistrosApp from '@/views/RegistrosApp.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
@@ -12,7 +13,12 @@ const routes = [
     path: '/dashboard',
     name: 'Gerenciamento',
     component: DashBoard
-  }
+  },
+  {
+    path: '/registros',
+    name: 'Registro Fabricação',
+    component: RegistrosApp
+  },
 ]
 
 const router = createRouter({
