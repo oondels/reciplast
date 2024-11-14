@@ -35,10 +35,10 @@ router.get("/get-estoque", async (req, res, next) => {
   }
 });
 
-// Produtos em Estoque e Quantidade
+// Produtos em Estoque
 router.get("/get-produtos", async (req, res, next) => {
-	try {
-		const query = await pool.query(`
+  try {
+    const query = await pool.query(`
 			SELECT 
 				p.nome, p.id, p.type, SUM(CASE WHEN e.entrada = true THEN e.quantidade ELSE 0 END) - 
 				SUM(CASE WHEN e.saida = true THEN e.quantidade ELSE 0 END) AS quantidade
@@ -50,29 +50,11 @@ router.get("/get-produtos", async (req, res, next) => {
 				p.nome, p.id, p.type
 			`);
 
-		return res.status(200).json(query.rows);
-	} catch (error) {
-		next(error)
-	}
-})
-
-router.get("/get-produto-producao", async (req, res, next) => {
-	try {
-		const query = await pool.query(`
-			SELECT
-				p.nome, p.id, p.type
-			FROM 
-				reciplast.produtos p
-			WHERE
-				p.type = 'produto-final'
-		`)
-
-		return res.status(200).json(query.rows)
-	} catch (error) {
-		next(error)
-		
-	}
-})
+    return res.status(200).json(query.rows);
+  } catch (error) {
+    next(error);
+  }
+});
 
 router.post("/post-produto-estoque", async (req, res, next) => {
   try {
@@ -87,7 +69,6 @@ router.post("/post-produto-estoque", async (req, res, next) => {
       custo_venda,
       fornecedor,
       username,
-      user_id,
     } = req.body;
 
     const queryMaterial = await pool.query(
@@ -98,18 +79,48 @@ router.post("/post-produto-estoque", async (req, res, next) => {
       [material_id]
     );
 
+    // Atualizar estoque Plástico Após Produção de Fardos de Sacola/Grão
+    if (material_id === 3 || material_id === 4) {
+      const estoquePlastico = await pool.query(`
+				SELECT 
+					SUM(case when entrada then quantidade else 0 end) - 
+					SUM(case when saida then quantidade else 0 end) AS "quantidade" 
+				FROM
+					reciplast.estoque
+				WHERE 
+					material_id = 2
+			`);
+			
+      if (Number(estoquePlastico.rows[0].quantidade) < Number(quantidade)) {
+        return res
+          .status(400)
+          .json({ message: "Quantidade de plástico insuficiente para produção de fardos. Atualize o Estoque, caso não tenha feito." });
+      }
+
+			const updatePlastico = await pool.query(`
+				INSERT INTO reciplast.estoque 
+					(material_id, quantidade, unidade, entrada, saida, data, username, fornecedor, created_at, updated_at)
+				VALUES (2, $1, 'KG', false, true, $2, $3, 'Produção de Material', NOW(), NOW())
+				RETURNING *
+			`, [quantidade, data, username]);
+
+			if(updatePlastico.rows.length === 0) {
+				return res.status(400).json({ message: "Erro ao atualizar estoque. Tente novamente." });
+			}
+    }
+
     // Atualizar financeiro
     const attFinance = async (tipo, produto, valor) => {
       let descricao = `${tipo === "compra" ? "Compra" : "Venda"} de ${produto.nome} `;
       let query = `
-				INSERT INTO reciplast.financeiro (descricao, valor, data, user_create, user_id, metodo_pagamento, tipo, categoria_id)
-				VALUES ($1, $2, $3, $4, $5, 'PIX', '${tipo === "compra" ? "despesa" : "receita"}', ${
+				INSERT INTO reciplast.financeiro (descricao, valor, data, user_create, metodo_pagamento, tipo, categoria_id)
+				VALUES ($1, $2, $3, $4, 'PIX', '${tipo === "compra" ? "despesa" : "receita"}', ${
         produto.type === "materia-prima" ? 2 : 1
       })
 				RETURNING *
 			`;
 
-      const postFinance = await pool.query(query, [descricao, valor, data, username, user_id]);
+      const postFinance = await pool.query(query, [descricao, valor, data, username]);
       if (postFinance.rows.length === 0) {
         return res.status(400).json({ message: "Erro ao atualizar estoque. Tente novamente." });
       }
@@ -128,8 +139,8 @@ router.post("/post-produto-estoque", async (req, res, next) => {
 
     const postMaterial = await pool.query(
       `INSERT INTO reciplast.estoque 
-			(material_id, quantidade, unidade, entrada, saida, data, custo_compra, custo_venda, fornecedor, username, user_id, total_custo, created_at, updated_at)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW())
+			(material_id, quantidade, unidade, entrada, saida, data, custo_compra, custo_venda, fornecedor, username, total_custo, created_at, updated_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
 			RETURNING *`,
       [
         material_id,
@@ -142,7 +153,6 @@ router.post("/post-produto-estoque", async (req, res, next) => {
         custo_venda,
         fornecedor,
         username,
-        user_id,
         total_custo,
       ]
     );
@@ -282,7 +292,7 @@ router.put("/fardo-produto/:id", async (req, res, next) => {
       return res.status(400).json({ message: "Erro ao atualizar fardos. Tente novamente." });
     }
 
-    return res.status(200).json({message: "Fardos atualizados com sucesso."});
+    return res.status(200).json({ message: "Fardos atualizados com sucesso." });
   } catch (error) {
     next(error);
   }

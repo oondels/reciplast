@@ -64,14 +64,32 @@ router.get("/get-financeiro", async (req, res, next) => {
 
 router.post("/post-financeiro", async (req, res, next) => {
   try {
-    const { tipo, categoria_id, descricao, valor, data, metodo_pagamento, user_create, user_id } =
-      req.body;
+    const { tipo, categoria_id, descricao, valor, data, metodo_pagamento, user_create } = req.body;
 
     let query = `
-		INSERT INTO reciplast.financeiro (tipo, categoria_id, descricao, valor, data, metodo_pagamento, user_create, user_id)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO reciplast.financeiro (tipo, categoria_id, descricao, valor, data, metodo_pagamento, user_create)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING *
 		`;
+
+    // Verificar se é compra de materia prima para atualizar estoque
+    if (categoria_id === 2) {
+      const updateEstqueMateriaPrima = await pool.query(
+        `
+				INSERT INTO reciplast.estoque
+				(quantidade, unidade, entrada, saida, data, username, fornecedor, total_custo, material_id, custo_compra, created_at, updated_at)
+				VALUES ($1, 'KG', true, false, $2, $3, $4, $5, $6, $7, NOW(), NOW())	
+				RETURNING *
+			`,
+        [req.body.quantidade, data, user_create, req.body.fornecedor, valor, req.body.material_id, req.body.custo_compra]
+      );
+
+      if (updateEstqueMateriaPrima.rows.length === 0) {
+        return res.status(400).json({
+          message: "Erro ao atualizar materia prima. Verifique as informações e tente novamente.",
+        });
+      }
+    }
 
     const postFinance = await pool.query(query, [
       tipo,
@@ -81,7 +99,6 @@ router.post("/post-financeiro", async (req, res, next) => {
       data,
       metodo_pagamento,
       user_create,
-      user_id,
     ]);
 
     if (postFinance.rows.length === 0) {
@@ -90,9 +107,24 @@ router.post("/post-financeiro", async (req, res, next) => {
       });
     }
 
+		if (categoria_id === 2) {
+			return res.status(201).json({ message: "Financeiro e Estoque de Materia Prima Atualizado com Sucesso!" });
+		}
     return res.status(201).json({ message: "Financeiro atualizado com sucesso!" });
   } catch (error) {
-    next(error);		
+    next(error);
+  }
+});
+
+router.get("/get-categoria", async (req, res, next) => {
+  try {
+    const result = await pool.query(
+      "SELECT categoria, descricao, id FROM reciplast.financeiro_categoria"
+    );
+
+    return res.status(200).json(result.rows);
+  } catch (error) {
+    next(error);
   }
 });
 
