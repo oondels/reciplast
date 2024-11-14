@@ -14,13 +14,16 @@ export default {
   name: "App",
   components: { NavBar, SideNav },
   data() {
-    return { showSideNav: false };
+    return { 
+			showSideNav: false,
+		};
   },
 
   methods: {
     toggleSideMenu() {
       this.showSideNav = !this.showSideNav;
     },
+
   },
 };
 </script>
@@ -32,7 +35,8 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
   background-color: #f0f2f5;
-	display: flex;
+  display: flex;
+	overflow: hidden !important;
 }
 
 main {

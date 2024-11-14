@@ -6,17 +6,21 @@
 
     <div class="w-auto">
       <ul class="navbar-nav">
-        <router-link class="nav-button" to="/" active-class="active"> <i class="mdi mdi-home"></i>Início</router-link>
+        <router-link class="nav-button" to="/" active-class="active">
+          <i class="mdi mdi-home"></i>Início</router-link
+        >
 
         <router-link class="nav-button" to="/dashboard" active-class="active">
           <i class="mdi mdi-view-dashboard"></i>Gerenciamento
         </router-link>
 
-				<router-link class="nav-button" to="/registros" active-class="active">
+        <router-link class="nav-button" to="/registros" active-class="active">
           <i class="mdi mdi-apps"></i>Registros
         </router-link>
 
-        <span class="nav-button" :class="{ active: isActive('/profile') }"><i role="button" class="mdi mdi-account-circle"></i>Perfil</span>
+        <span class="nav-button" :class="{ active: isActive('/profile') }">
+          <i role="button" class="mdi mdi-account-circle"></i>Perfil
+        </span>
       </ul>
     </div>
   </aside>
@@ -39,10 +43,10 @@ export default {
   computed() {},
 
   methods: {
-		isActive(route) {
+    isActive(route) {
       return this.$route.path === route;
-    }
-	},
+    },
+  },
 };
 </script>
 
@@ -52,7 +56,7 @@ export default {
 }
 
 .side-nav {
-  height: 98vh;
+  height: 95vh;
   position: fixed;
   left: -280px;
   top: 0;
