@@ -1,5 +1,5 @@
 <template>
-<div class="home">
+  <div class="home">
     <section class="hero">
       <div class="hero-content">
         <h1>Bem-vindo à Reciplast</h1>
@@ -22,7 +22,9 @@
       <div class="info-card">
         <i class="icon mdi mdi-leaf"></i>
         <h3>Missão</h3>
-        <p>Promover a sustentabilidade por meio da reciclagem e da produção de sacolas de qualidade.</p>
+        <p>
+          Promover a sustentabilidade por meio da reciclagem e da produção de sacolas de qualidade.
+        </p>
       </div>
       <div class="info-card">
         <i class="icon mdi mdi-heart"></i>
@@ -30,12 +32,17 @@
         <p>Respeito ao meio ambiente, inovação e compromisso social.</p>
       </div>
     </section>
+
+    <Footer />
   </div>
 </template>
 
 <script>
+import Footer from "@/components/Footer.vue";
+
 export default {
   name: "HomeView",
+  components: { Footer },
   data() {
     return {
       company: {
@@ -43,11 +50,12 @@ export default {
         description: "Líder em reciclagem e fabricação de sacolas sustentáveis.",
         location: "Santo Estêvão, Bahia, Brasil",
         foundation: "Fundada em 2010",
-        mission: "Promover a sustentabilidade por meio da reciclagem e da produção de sacolas de qualidade.",
-        values: "Respeito ao meio ambiente, inovação e compromisso social."
-      }
+        mission:
+          "Promover a sustentabilidade por meio da reciclagem e da produção de sacolas de qualidade.",
+        values: "Respeito ao meio ambiente, inovação e compromisso social.",
+      },
     };
-  }
+  },
 };
 </script>
 
