@@ -16,7 +16,10 @@
     "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
     "core-js": "^3.8.3",
+    "material-design-icons-iconfont": "^6.7.0",
+    "material-icons": "^1.13.12",
     "vue": "^3.2.13",
+    "vue-jwt-decode": "^0.1.0",
     "vue-router": "^4.0.3",
     "vue3-apexcharts": "^1.7.0",
     "vuetify": "^3.7.4"
