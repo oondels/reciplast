@@ -10,6 +10,7 @@ import AuthRoutes from "./routes/authRoutes.js";
 import ChartRoutes from "./routes/charts.js";
 import EstoqueRoutes from "./routes/estoque.js";
 import FinaneiroRoutes from "./routes/financeiro.js";
+import Pedidos from "./routes/pedidos.js";
 
 import checkToken from "./utils/checkToken.js";
 
@@ -30,6 +31,7 @@ app.use("/auth", AuthRoutes);
 app.use("/estoque", EstoqueRoutes)
 app.use("/financeiro", FinaneiroRoutes)
 app.use("/chart", ChartRoutes)
+app.use("/pedido", Pedidos)
 
 io.on("connection", (socket) => {
   console.log("Novo cliente conectado:", socket.id);
