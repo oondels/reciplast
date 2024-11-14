@@ -69,7 +69,8 @@ router.get("/estoqueIndividual-chart-data", async (req, res, next) => {
     let query = `
 			SELECT 
 				p.nome, p.tag, p.type, p.id,
-				SUM(e.quantidade) AS quantidade
+				SUM(CASE WHEN e.entrada THEN e.quantidade ELSE 0 END) - 
+    		SUM(CASE WHEN e.saida THEN e.quantidade ELSE 0 END) AS "quantidade"
 			FROM
 				reciplast.produtos p
 			LEFT JOIN 
@@ -356,7 +357,7 @@ router.get("/detailed-sell-history", async (req, res, next) => {
 				reciplast.produtos p ON e.material_id = p.id
 			WHERE
 				EXTRACT(YEAR FROM e.data) = EXTRACT(YEAR FROM CURRENT_DATE) AND
-				e.material_id = 3 OR e.material_id = 4
+				e.material_id = 3 OR e.material_id = 4 AND e.saida = true AND e.entrada = false
 			GROUP BY
 				EXTRACT(MONTH FROM e.data), e.saida, p.nome
 			ORDER BY
@@ -489,5 +490,30 @@ router.get("/production-history", async (req, res, next) => {
     next(error);
   }
 });
+
+router.get("/producao-mensal", async (req, res, next) => {
+	try {
+		const query = await pool.query(`
+			SELECT 
+				p.nome, p.type, COUNT(e.quantidade) as fardos, p.id
+			FROM
+				reciplast.produtos p
+			LEFT JOIN
+				reciplast.estoque e ON p.id = e.material_id
+			WHERE
+				p.type = 'produto-final' AND 
+				EXTRACT(YEAR FROM e.data) = EXTRACT(YEAR FROM CURRENT_DATE) AND
+				EXTRACT(MONTH FROM e.data) = EXTRACT(MONTH FROM CURRENT_DATE) AND
+				e.entrada = true AND e.saida = false
+			GROUP BY
+				p.nome, p.type, p.id
+		`)
+
+		return res.status(200).json(query.rows);
+	} catch (error) {
+		next(error);
+		
+	}
+})
 
 export default router;
