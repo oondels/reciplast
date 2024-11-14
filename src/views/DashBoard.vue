@@ -4,28 +4,20 @@
 
     <div class="charts-container">
       <h3 class="dashboard-title">Produção Mensal</h3>
-      <div class="min-charts space">
-        <div class="chart-item">
+      <div class="min-charts-fardo space">
+        <div v-for="producao in producaoMensal" :key="producao.id" class="chart-item">
           <div class="production-card">
             <div class="icon">
-              <i class="mdi mdi-shopping fs-5"></i>
+              <i class="mdi" :class="materialIcon[producao.nome]"></i>
             </div>
-            <div class="details">
-              <h3>Produção de Sacolas</h3>
-              <p class="quantity">50 <span class="label">Fardos Produzidos</span></p>
-							<p class="sub-info">Meta: 80 fardos</p>
-            </div>
-          </div>
-        </div>
 
-        <div class="chart-item">
-          <div class="production-card">
-            <div class="icon">
-              <i class="mdi mdi-grain fs-5"></i>
-            </div>
             <div class="details">
-              <h3>Produção de Grão</h3>
-              <p class="quantity">75 <span class="label">Fardos Produzidos</span></p>
+              <h3>Produção de {{ producao.nome }}</h3>
+
+              <p class="quantity">
+                {{ producao.fardos }} <span class="label">Fardos Produzidos</span>
+              </p>
+
               <p class="sub-info">Meta: 80 fardos</p>
             </div>
           </div>
@@ -124,7 +116,7 @@
                   "
                 >
                   <ApexCharts
-                    max-width="500"
+                    max-width="400"
                     :options="generalExpensesData.options"
                     :series="generalExpensesData.series"
                     type="donut"
@@ -148,12 +140,6 @@
                       type="donut"
                       :options="detailedExpensesData.optionsDespesa"
                       :series="detailedExpensesData.seriesDespesa"
-                    />
-                    <h4 class="text-center">Detalhamento de Receita</h4>
-                    <ApexCharts
-                      type="donut"
-                      :options="detailedExpensesData.optionsReceita"
-                      :series="detailedExpensesData.seriesReceita"
                     />
                   </div>
                 </v-card-text>
@@ -193,7 +179,7 @@
 
               <ApexCharts
                 type="area"
-                width="700"
+                class="chart"
                 :options="expensesHistoryData.options"
                 :series="expensesHistoryData.series"
               />
@@ -277,18 +263,20 @@
         </div>
       </div>
     </div>
+    <Footer />
   </div>
 </template>
 
 <script>
 import ApexChart from "@/components/ApexChart.vue";
+import Footer from "@/components/Footer.vue";
 import axios from "axios";
 import ApexCharts from "vue3-apexcharts";
 import ip from "../ip";
 
 export default {
   name: "DashBoard",
-  components: { ApexChart, ApexCharts },
+  components: { ApexChart, ApexCharts, Footer },
 
   data() {
     return {
@@ -328,6 +316,7 @@ export default {
       detailedSellHistoryData: null,
 
       productionHistoryData: null,
+      producaoMensal: null,
 
       materialIcon: {
         Plástico: "mdi mdi-recycle fs-5",
@@ -344,6 +333,7 @@ export default {
     this.generalExpenses();
     this.expensesHistory();
     this.productionHistory();
+    this.getProducaoFardo();
   },
   methods: {
     getEstoqueGeral() {
@@ -366,6 +356,18 @@ export default {
         })
         .catch((error) => {
           console.error("Erro ao buscar dados gerais do estoque: ", error);
+        });
+    },
+
+    getProducaoFardo() {
+      axios
+        .get(`${ip}/chart/producao-mensal`)
+        .then((response) => {
+          this.producaoMensal = response.data;
+          console.log(this.producaoMensal);
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar dados de produção mensal: ", error);
         });
     },
 
@@ -464,7 +466,7 @@ export default {
 }
 
 .dashboard-title::after {
-  content: '';
+  content: "";
   display: block;
   width: 60px;
   height: 3px;
@@ -509,6 +511,14 @@ export default {
 .min-charts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+.min-charts-fardo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 10px;
   width: 100%;
   margin-bottom: 20px;
@@ -566,7 +576,18 @@ export default {
   color: #6b7280;
 }
 
+.chart {
+  width: 60%;
+  height: 300px;
+}
+
 .space {
   margin-bottom: 50px;
+}
+
+@media screen and (max-width: 890px) {
+  .chart {
+    width: 100%;
+  }
 }
 </style>
