@@ -52,7 +52,12 @@
     <h4 class="register-title">Pedidos</h4>
     <div class="form">
       <v-container>
+        
         <v-card class="mx-auto">
+					<p class="m-3">
+          Sessão destinada para registro de pedidos de produtos finais. Atualizando também o estoque
+          e consumo de matéria prima.
+        </p>
           <v-card-text>
             <!-- Seleção do Produto -->
             <v-row>
@@ -125,9 +130,17 @@
 
     <v-divider :thickness="3" class="border-opacity-25 spacer" color="success"></v-divider>
 
-    <h4 class="register-title">Registro Financeiro / Materia Prima</h4>
+    <h4 class="register-title">
+      <i class="material-icons mr-2 text-success">account_balance_wallet</i> Registro Financeiro /
+      Materia Prima
+    </h4>
     <div class="form">
       <div class="register d-flex flex-column justify-content-center align-items-center">
+        <p>
+          Sessão designada para registro das despesas da empresa no decorrer do mês e registro de
+          compra de matéria prima.
+        </p>
+
         <div class="col-12 d-flex flex-row flex-wrap">
           <v-combobox
             class="col-12 col-md-6 mb-2"
@@ -147,7 +160,12 @@
             v-model="valorFinanceiro"
             :disabled="!categoriaFinancerioSelecionada"
             type="number"
-            label="Valor"
+            :label="
+              categoriaFinancerioSelecionada &&
+              categoriaFinancerioSelecionada.categoria === 'Compra de Matéria-prima'
+                ? 'Valor por KG'
+                : 'Valor'
+            "
             variant="outlined"
           />
         </div>
@@ -254,7 +272,7 @@
       </div>
     </div>
 
-		<Footer />
+    <Footer />
   </div>
 
   <alert ref="alert"></alert>
