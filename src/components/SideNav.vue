@@ -18,9 +18,9 @@
           <i class="mdi mdi-apps"></i>Registros
         </router-link>
 
-        <span class="nav-button" :class="{ active: isActive('/profile') }">
+        <!-- <span class="nav-button" :class="{ active: isActive('/profile') }">
           <i role="button" class="mdi mdi-account-circle"></i>Perfil
-        </span>
+        </span> -->
       </ul>
     </div>
   </aside>
