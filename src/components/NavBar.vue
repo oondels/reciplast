@@ -1,7 +1,10 @@
 <template>
   <nav class="shadow-none navbar navbar-main navbar-expand-lg border-radius-xl" data-scroll="true">
     <div class="px-3 py-1 container-fluid">
-      <div class="pag-atual">{{ pageName() }}</div>
+      <div class="pag-atual">
+        <router-link to="/"> Início </router-link> /
+        {{ pageName() === "Início" ? "" : pageName() }}
+      </div>
 
       <div class="actions">
         <v-dialog max-width="400">
@@ -39,7 +42,7 @@
 
                 <v-text-field
                   :rules="[required]"
-									type="password"
+                  type="password"
                   label="Senha"
                   variant="outlined"
                   color="success"
@@ -63,7 +66,7 @@
             </v-card>
           </template>
 
-					<!-- User Logado -->
+          <!-- User Logado -->
           <template v-else v-slot:default="{ isActive }">
             <v-card>
               <v-card-title
@@ -207,4 +210,9 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+a {
+  text-decoration: none;
+  color: black;
+}
+</style>
