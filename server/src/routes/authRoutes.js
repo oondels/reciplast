@@ -1,7 +1,6 @@
 import bcrypt from "bcrypt";
 import Router from "express";
 import jwt from "jsonwebtoken";
-import nodeMailer from "nodemailer";
 import validator from "validator";
 import pool from "../config/db/connection.js";
 
@@ -86,6 +85,8 @@ router.post("/login", async (req, res, next) => {
         username: user.username,
         name: user.name,
         email: user.email,
+				admin: user.admin,
+				nivel: user.nivel
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
@@ -93,8 +94,8 @@ router.post("/login", async (req, res, next) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
+			secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
     });
 
     return res.status(200).json({ message: `Bem vindo ${user.username}`, token: token });
@@ -102,5 +103,68 @@ router.post("/login", async (req, res, next) => {
     next(error);
   }
 });
+
+router.post("/logout", async (req, res, next) => {
+	try {
+		res.cookie("token", "", {
+			httpOnly: true,
+			expires: new Date(0),
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
+		});
+
+		res.clearCookie("token", {
+			httpOnly: true,
+			secure: process.env.NODE_ENV === "production",
+			sameSite: "lax",
+		})
+
+		res.status(200).json({ message: "Logout efetuado com sucesso." });
+	} catch (error) {
+		next(error);
+	}
+})
+
+router.post("/check-recover-cpf", async (req, res, next) => {
+	try {
+		const cpf = req.body.cpf
+		
+		const checkCpf = await pool.query("SELECT cpf FROM reciplast.users WHERE cpf = $1", [cpf]);
+		if (checkCpf.rows.length === 0) {
+			return res.status(404).json({ message: "CPF não encontrado. Verifique se Digitou Corretamente." });
+		}
+
+		return res.status(200).json({ message: "CPF encontrado. Continue com a recuperação de senha." });
+	} catch (error) {
+		next(error);
+		
+	}
+})
+
+router.post("/recover", async (req, res, next) => {
+	try {
+		const {cpf, newPassword, repeatNewPassword} = req.body
+
+		if (newPassword !== repeatNewPassword) {
+			return res.status(403).json({ message: "As senhas não coincidem." });
+		}
+
+		const hashedPassword = await bcrypt.hash(newPassword, 8);
+
+		const updatePassword = await pool.query(`
+			UPDATE reciplast.users
+			SET password = $1
+			WHERE cpf = $2	
+		`, [hashedPassword, cpf])
+
+		if (updatePassword.rowCount === 0) {
+			return res.status(404).json({ message: "Erro ao atualizar senha. Tente novamente." });
+		}
+
+		return res.status(200).json({ message: "Senha atualizada com sucesso." });
+	} catch (error) {
+		next(error);
+	}
+})
 
 export default router;
