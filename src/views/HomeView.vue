@@ -4,7 +4,7 @@
       <div class="hero-content">
         <h1>Bem-vindo à Reciplast</h1>
         <p>Líder em reciclagem e fabricação de sacolas sustentáveis.</p>
-        <button class="cta-button">Saiba Mais</button>
+        <button class="cta-button"><i class="mdi mdi-recycle fs-2"></i></button>
       </div>
     </section>
 
@@ -12,7 +12,7 @@
       <div class="info-card">
         <i class="icon mdi mdi-map-marker"></i>
         <h3>Localidade</h3>
-        <p>Santo Estêvão, Bahia, Brasil</p>
+        <p>Av. Paraguasssu/Faz. Magalhaes, 715. Santo Estêvão, Bahia, Brasil</p>
       </div>
       <div class="info-card">
         <i class="icon mdi mdi-calendar"></i>
