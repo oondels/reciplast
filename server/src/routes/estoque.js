@@ -1,10 +1,11 @@
 import { Router } from "express";
 import pool from "../config/db/connection.js";
+import checkToken from "../utils/checkToken.js";
 
 const router = Router();
 
 // Estoque de Material
-router.get("/get-estoque", async (req, res, next) => {
+router.get("/get-estoque", checkToken, async (req, res, next) => {
   try {
     const id = req.query.id;
     const fornecedor = req.query.fornecedor;
@@ -36,7 +37,7 @@ router.get("/get-estoque", async (req, res, next) => {
 });
 
 // Produtos em Estoque
-router.get("/get-produtos", async (req, res, next) => {
+router.get("/get-produtos", checkToken, async (req, res, next) => {
   try {
     const query = await pool.query(`
 			SELECT 
@@ -56,7 +57,7 @@ router.get("/get-produtos", async (req, res, next) => {
   }
 });
 
-router.post("/post-produto-estoque", async (req, res, next) => {
+router.post("/post-produto-estoque", checkToken, async (req, res, next) => {
   try {
     let {
       material_id,
@@ -169,7 +170,7 @@ router.post("/post-produto-estoque", async (req, res, next) => {
   }
 });
 
-router.get("/get-residuo", async (req, res, next) => {
+router.get("/get-residuo", checkToken, async (req, res, next) => {
   try {
     const id = req.query.id;
     const data = req.query.data;
@@ -193,7 +194,7 @@ router.get("/get-residuo", async (req, res, next) => {
   }
 });
 
-router.post("/post-residuo", async (req, res, next) => {
+router.post("/post-residuo", checkToken, async (req, res, next) => {
   try {
     const { produto_id, quantidade, descricao, user_create } = req.body;
 
@@ -227,7 +228,7 @@ router.post("/post-residuo", async (req, res, next) => {
 });
 
 // Tipos de Produtos
-router.post("/post-produto", async (req, res, next) => {
+router.post("/post-produto", checkToken, async (req, res, next) => {
   try {
     const { nome, tag, type, user_create } = req.body;
 
@@ -252,7 +253,7 @@ router.post("/post-produto", async (req, res, next) => {
 });
 
 // Fardos por Produto
-router.get("/fardo-produto/:id", async (req, res, next) => {
+router.get("/fardo-produto/:id", checkToken, async (req, res, next) => {
   try {
     const id = req.params.id;
 
@@ -273,7 +274,7 @@ router.get("/fardo-produto/:id", async (req, res, next) => {
   }
 });
 
-router.put("/fardo-produto/:id", async (req, res, next) => {
+router.put("/fardo-produto/:id", checkToken, async (req, res, next) => {
   try {
     const id = req.params.id;
     const novosFardos = JSON.parse(req.query.fardos);
@@ -297,5 +298,22 @@ router.put("/fardo-produto/:id", async (req, res, next) => {
     next(error);
   }
 });
+
+// Fornecedores
+router.get("/get-fornecedores", checkToken, async (req, res, next) => {
+	try {
+		const query = await pool.query(`
+			SELECT fornecedor 
+			FROM reciplast.estoque
+			WHERE fornecedor != 'Produção Interna' AND entrada = true
+			GROUP BY fornecedor
+		`)
+
+		return res.status(200).json(query.rows);
+	} catch (error) {
+		next(error);
+		
+	}
+})
 
 export default router;

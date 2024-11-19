@@ -1,5 +1,6 @@
 import { Router } from "express";
 import pool from "../config/db/connection.js";
+import checkToken from "../utils/checkToken.js";
 
 const router = Router();
 
@@ -19,7 +20,7 @@ const meses = {
 };
 
 // Estoque Geral dos Materiais
-router.get("/estoqueGeral-chart-data", async (req, res, next) => {
+router.get("/estoqueGeral-chart-data", checkToken, async (req, res, next) => {
   try {
     let query = `
 			SELECT 
@@ -64,7 +65,7 @@ router.get("/estoqueGeral-chart-data", async (req, res, next) => {
 });
 
 // Estoque Individual de cada material
-router.get("/estoqueIndividual-chart-data", async (req, res, next) => {
+router.get("/estoqueIndividual-chart-data", checkToken, async (req, res, next) => {
   try {
     let query = `
 			SELECT 
@@ -88,7 +89,7 @@ router.get("/estoqueIndividual-chart-data", async (req, res, next) => {
 });
 
 // Histórico de entradas e saídas de material
-router.get("/stock-history/:materialId", async (req, res, next) => {
+router.get("/stock-history/:materialId", checkToken,  async (req, res, next) => {
   try {
     const materialId = req.params.materialId;
 
@@ -163,7 +164,7 @@ router.get("/stock-history/:materialId", async (req, res, next) => {
 });
 
 // Financeiro
-router.get("/general-expenses", async (req, res, next) => {
+router.get("/general-expenses", checkToken, async (req, res, next) => {
   try {
     const query = `
 			SELECT 
@@ -203,7 +204,7 @@ router.get("/general-expenses", async (req, res, next) => {
   }
 });
 
-router.get("/detailed-expenses", async (req, res, next) => {
+router.get("/detailed-expenses", checkToken, async (req, res, next) => {
   try {
     const queryDespesa = `
 			SELECT 
@@ -285,7 +286,7 @@ router.get("/detailed-expenses", async (req, res, next) => {
 });
 
 // Gráfico de Linha de Receita e Despesa Mensal
-router.get("/expenses-history", async (req, res, next) => {
+router.get("/expenses-history", checkToken, async (req, res, next) => {
   try {
     const query = await pool.query(`
 		SELECT
@@ -345,7 +346,7 @@ router.get("/expenses-history", async (req, res, next) => {
 });
 
 // Detalhamento de vendas/produto
-router.get("/detailed-sell-history", async (req, res, next) => {
+router.get("/detailed-sell-history", checkToken, async (req, res, next) => {
   try {
     const query = await pool.query(`
 			SELECT 
@@ -357,7 +358,7 @@ router.get("/detailed-sell-history", async (req, res, next) => {
 				reciplast.produtos p ON e.material_id = p.id
 			WHERE
 				EXTRACT(YEAR FROM e.data) = EXTRACT(YEAR FROM CURRENT_DATE) AND
-				e.material_id = 3 OR e.material_id = 4 AND e.saida = true AND e.entrada = false
+				e.material_id = 3 OR e.material_id = 4 AND e.saida = true
 			GROUP BY
 				EXTRACT(MONTH FROM e.data), e.saida, p.nome
 			ORDER BY
@@ -408,7 +409,7 @@ router.get("/detailed-sell-history", async (req, res, next) => {
 });
 
 // Produção de Sacolas e Grãos
-router.get("/production-history", async (req, res, next) => {
+router.get("/production-history", checkToken, async (req, res, next) => {
   try {
     const query = await pool.query(`
 			SELECT 
@@ -479,21 +480,19 @@ router.get("/production-history", async (req, res, next) => {
       donutSeries[index] = serie.data.reduce((acc, curr) => acc + curr);
     });
 
-    return res
-      .status(200)
-      .json({
-        options: chartOptions,
-        series: chartSeries,
-        donut: { options: donutOptions, series: donutSeries },
-      });
+    return res.status(200).json({
+      options: chartOptions,
+      series: chartSeries,
+      donut: { options: donutOptions, series: donutSeries },
+    });
   } catch (error) {
     next(error);
   }
 });
 
-router.get("/producao-mensal", async (req, res, next) => {
-	try {
-		const query = await pool.query(`
+router.get("/producao-mensal", checkToken, async (req, res, next) => {
+  try {
+    const query = await pool.query(`
 			SELECT 
 				p.nome, p.type, COUNT(e.quantidade) as fardos, p.id
 			FROM
@@ -507,13 +506,12 @@ router.get("/producao-mensal", async (req, res, next) => {
 				e.entrada = true AND e.saida = false
 			GROUP BY
 				p.nome, p.type, p.id
-		`)
+		`);
 
-		return res.status(200).json(query.rows);
-	} catch (error) {
-		next(error);
-		
-	}
-})
+    return res.status(200).json(query.rows);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;
