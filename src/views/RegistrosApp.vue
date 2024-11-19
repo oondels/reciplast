@@ -2,24 +2,25 @@
   <div class="registros-container">
     <h4 class="register-title">Registro de Produção</h4>
     <div class="form">
+      <Info
+        :infoDescription="'Registro da produção de fardos do produto selecionado (Sacola de Plástico ou Grãos). O registro atualiza automaticamente o estoque do produto final e dos materiais utilizados no processo de fabricação.'"
+      />
+
       <div class="register" v-for="produto in filterProdutos()" :key="produto.id">
-        <p>
-          Registrar produção de {{ produto.nome }}:
-          {{ selectedFardoSacola ? selectedFardoSacola + " Kg" : "Selecione um fardo" }}
-        </p>
+        <p class="p-2 alert alert-primary rounded">Produção de {{ produto.nome }}</p>
 
         <div class="actions">
           <v-select
             v-if="produto.nome === 'Sacola de Plástico' && fardoSacola"
             clearable
-            label="Fardos"
+            label="Fardo (Kg)"
             :items="fardoSacola"
             v-model="selectedFardoSacola"
           />
           <v-select
             v-if="produto.nome === 'Grão de Plástico Reciplast' && fardoGrao"
             clearable
-            label="Fardos"
+            label="Fardo (Kg)"
             :items="fardoGrao"
             v-model="selectedFardoGrao"
           />
@@ -30,8 +31,12 @@
             prepend-icon="mdi mdi-plus-circle"
             variant="outlined"
             color="primary"
+            :loading="loadingProducao"
           >
             Adicionar
+            <template v-slot:loader>
+              <v-progress-linear indeterminate></v-progress-linear>
+            </template>
           </v-btn>
 
           <v-btn
@@ -40,8 +45,12 @@
             prepend-icon="mdi mdi-plus-circle"
             variant="outlined"
             color="primary"
+            :loading="loadingProducao"
           >
             Adicionar
+            <template v-slot:loader>
+              <v-progress-linear indeterminate></v-progress-linear>
+            </template>
           </v-btn>
         </div>
       </div>
@@ -51,13 +60,15 @@
 
     <h4 class="register-title">Pedidos</h4>
     <div class="form">
+      <Info
+        :infoDescription="'Registro de pedidos concluídos. Nesta seção, é realizado a liberação de produtos vendidos para clientes. É necessário informar o produto, a quantidade vendida (em quilos), o valor do produto por quilo, o cliente e a data da transação.'"
+      />
+
       <v-container>
-        
         <v-card class="mx-auto">
-					<p class="m-3">
-          Sessão destinada para registro de pedidos de produtos finais. Atualizando também o estoque
-          e consumo de matéria prima.
-        </p>
+          <p class="m-3 p-2 alert alert-primary rounded">
+            Registro de pedidos de produtos. Atualizando também o estoque e consumo de material.
+          </p>
           <v-card-text>
             <!-- Seleção do Produto -->
             <v-row>
@@ -69,6 +80,7 @@
                   item-title="nome"
                   item-value="id"
                   variant="outlined"
+                  clearable
                   required
                 ></v-select>
               </v-col>
@@ -76,19 +88,29 @@
 
             <!-- Campo de Quantidade -->
             <div class="col-12 d-flex flex-row flex-wrap">
-              <v-text-field
+              <v-select
+                v-if="pedido.produto && pedido.produto === 3"
                 class="col-12 col-md-6 mb-2"
                 v-model="pedido.quantidade"
-                label="Quantidade (Kg)"
-                type="number"
                 variant="outlined"
-                required
-              ></v-text-field>
+                label="Fardo (Kg)"
+                :items="fardoGrao"
+              ></v-select>
+
+              <v-select
+                v-if="pedido.produto && pedido.produto === 4"
+                class="col-12 col-md-6 mb-2"
+                v-model="pedido.quantidade"
+                variant="outlined"
+                label="Fardo (Kg)"
+                :items="fardoSacola"
+              ></v-select>
 
               <v-text-field
+                v-if="pedido.produto"
                 class="col-12 col-md-6 mb-2"
                 v-model="pedido.valor"
-                label="Valor (R$)"
+                label="Valor/Kg (R$)"
                 type="number"
                 variant="outlined"
                 required
@@ -98,9 +120,23 @@
             <!-- Seleção de Cliente -->
             <v-row>
               <v-col>
-                <v-text-field
+                <v-combobox
+                  v-if="!newClient"
                   v-model="pedido.cliente"
-                  label="Cliente"
+                  label="Clientes Antigos"
+                  :items="clientes"
+                  clearable
+                  variant="outlined"
+                  required
+                ></v-combobox>
+
+                <!-- Cliente Novo -->
+                <v-checkbox v-model="newClient" label="Novo Cliente?"></v-checkbox>
+                <v-text-field
+                  v-if="newClient"
+                  v-model="pedido.cliente"
+                  label="Cliente Novo"
+                  clearable
                   variant="outlined"
                   required
                 ></v-text-field>
@@ -122,7 +158,13 @@
 
           <!-- Botão de Registro -->
           <v-card-actions class="justify-center">
-            <v-btn @click="postPedido" color="primary" variant="outlined"> Registrar Pedido </v-btn>
+            <v-btn @click="postPedido" color="primary" variant="outlined" :loading="loadingPedido">
+              Registrar Pedido
+
+              <template v-slot:loader>
+                <v-progress-linear indeterminate></v-progress-linear>
+              </template>
+            </v-btn>
           </v-card-actions>
         </v-card>
       </v-container>
@@ -131,12 +173,16 @@
     <v-divider :thickness="3" class="border-opacity-25 spacer" color="success"></v-divider>
 
     <h4 class="register-title">
-      <i class="material-icons mr-2 text-success">account_balance_wallet</i> Registro Financeiro /
-      Materia Prima
+      <i class="material-icons mr-2 text-success">account_balance_wallet</i>
+      Registro Financeiro / Materia Prima
     </h4>
     <div class="form">
+      <Info
+        :infoDescription="'Registro Financeiro. Nesta seção, é realizado o registro das despesas da empresa. É necessário selecionar a categoria da despesa e informar o valor total gasto. Para despesas relacionadas à matéria-prima, é necessário especificar o valor por quilograma, o material adquirido, a quantidade em quilogramas e o fornecedor.'"
+      />
+
       <div class="register d-flex flex-column justify-content-center align-items-center">
-        <p>
+        <p class="m-3 p-2 alert alert-primary rounded">
           Sessão designada para registro das despesas da empresa no decorrer do mês e registro de
           compra de matéria prima.
         </p>
@@ -195,7 +241,23 @@
             label="Quantidade (KG)"
           />
 
-          <v-text-field v-model="fornecedor" variant="outlined" label="Fornecedor" />
+          <v-combobox
+            v-if="!newFornecedor"
+            v-model="fornecedor"
+            :items="fornecedores"
+            clearable
+            variant="outlined"
+            label="Fornecedores Antigos"
+          />
+
+          <!-- Fornecedor Novo -->
+          <v-checkbox v-model="newFornecedor" label="Novo Fornecedor?"></v-checkbox>
+          <v-text-field
+            v-if="newFornecedor"
+            v-model="fornecedor"
+            variant="outlined"
+            label="Novo Fornecedor"
+          />
         </div>
 
         <p v-if="categoriaFinancerioSelecionada" class="descricao-financeiro">
@@ -210,8 +272,13 @@
           color="success"
           :disabled="!valorFinanceiro"
           @click="postFinanceiro('despesa-geral')"
+          :loading="loadingFinance"
         >
           Registrar
+
+          <template v-slot:loader>
+            <v-progress-linear indeterminate></v-progress-linear>
+          </template>
         </v-btn>
 
         <!-- Botão para materia prima -->
@@ -228,15 +295,19 @@
             !fornecedor
           "
           @click="postFinanceiro('materia-prima')"
+          :loading="loadingFinance"
         >
           Registrar
+
+          <template v-slot:loader>
+            <v-progress-linear indeterminate></v-progress-linear>
+          </template>
         </v-btn>
       </div>
     </div>
 
-    <v-divider :thickness="3" class="border-opacity-25 spacer" color="success"></v-divider>
-
-    <h4 class="register-title">Modificação de Estoque</h4>
+    <!-- <v-divider :thickness="3" class="border-opacity-25 spacer" color="success"></v-divider> -->
+    <!-- <h4 class="register-title">Modificação de Estoque</h4>
     <div class="form">
       <div class="register row justify-content-center align-items-center">
         <div class="col-md-6">
@@ -270,7 +341,7 @@
 
         <v-btn v-if="newProductStock" color="success">Atualizar</v-btn>
       </div>
-    </div>
+    </div> -->
 
     <Footer />
   </div>
@@ -281,17 +352,19 @@
 <script>
 import Alert from "@/components/Alert.vue";
 import Footer from "@/components/Footer.vue";
+import Info from "@/components/Info.vue";
 import axios from "axios";
 import VueJwtDecode from "vue-jwt-decode";
 import ip from "../ip";
 
 export default {
   name: "RegistrosApp",
-  components: { Alert, Footer },
+  components: { Alert, Footer, Info },
   props: {},
 
   data() {
     return {
+      loadingProducao: false,
       fardoSacola: null,
       fardoGrao: null,
       selectedFardoSacola: null,
@@ -305,6 +378,7 @@ export default {
       editProduto: false,
       newProductStock: null,
 
+      loadingFinance: false,
       categoriasFinancerio: [],
       financeiroDescricao: {},
       categoriaFinancerioSelecionada: null,
@@ -314,6 +388,12 @@ export default {
       quantidadeKgMateriaPrima: null,
       fornecedor: null,
 
+      clientes: [],
+      newClient: false,
+      fornecedores: [],
+      newFornecedor: false,
+
+      loadingPedido: false,
       pedido: {
         produto: "",
         quantidade: null,
@@ -329,6 +409,9 @@ export default {
     this.fecthFardoGrao();
     this.fetchProdutos();
     this.fetchCategoriaFinanceiro();
+
+    this.fetchClients();
+    this.fetchFornecedores();
   },
 
   methods: {
@@ -341,7 +424,7 @@ export default {
 
     fecthFardoSacola() {
       axios
-        .get(`${ip}/estoque/fardo-produto/3`)
+        .get(`${ip}/estoque/fardo-produto/3`, {withCredentials: true})
         .then((response) => {
           this.fardoSacola = response.data[0].producao;
         })
@@ -352,7 +435,7 @@ export default {
 
     fecthFardoGrao() {
       axios
-        .get(`${ip}/estoque/fardo-produto/4`)
+        .get(`${ip}/estoque/fardo-produto/4`, {withCredentials: true})
         .then((response) => {
           this.fardoGrao = response.data[0].producao;
         })
@@ -363,7 +446,7 @@ export default {
 
     fetchProdutos() {
       axios
-        .get(`${ip}/estoque/get-produtos`)
+        .get(`${ip}/estoque/get-produtos`, {withCredentials: true})
         .then((response) => {
           this.produtos = response.data;
           response.data.forEach((produto) => {
@@ -396,7 +479,7 @@ export default {
 
     fetchCategoriaFinanceiro() {
       axios
-        .get(`${ip}/financeiro/get-categoria`)
+        .get(`${ip}/financeiro/get-categoria`, {withCredentials: true})
         .then((response) => {
           response.data.forEach((categoria) => {
             if (categoria.categoria !== "Vendas") {
@@ -404,7 +487,6 @@ export default {
             }
             this.financeiroDescricao[categoria.categoria] = categoria.descricao;
           });
-          console.log(this.categoriasFinancerio);
         })
         .catch((error) => {
           console.error("Erro ao consultar categorias financeiras: ", error);
@@ -446,12 +528,14 @@ export default {
         user_id: 1,
       };
 
+      this.loadingProducao = !this.loadingProducao;
       axios
-        .post(`${ip}/estoque/post-produto-estoque`, data)
+        .post(`${ip}/estoque/post-produto-estoque`, data, {withCredentials: true})
         .then((response) => {
           this.selectedFardoGrao = null;
           this.selectedFardoSacola = null;
 
+          this.loadingProducao = !this.loadingProducao;
           return this.$refs.alert.mostrarAlerta(
             "success",
             "check_circle",
@@ -460,6 +544,7 @@ export default {
           );
         })
         .catch((error) => {
+          this.loadingProducao = !this.loadingProducao;
           console.error("Erro ao registrar produção: ", error);
           return this.$refs.alert.mostrarAlerta(
             "warning",
@@ -514,8 +599,9 @@ export default {
         };
       }
 
+      this.loadingFinance = !this.loadingFinance;
       axios
-        .post(`${ip}/financeiro/post-financeiro`, data)
+        .post(`${ip}/financeiro/post-financeiro`, data, {withCredentials: true})
         .then((response) => {
           this.categoriaFinancerioSelecionada = null;
           this.valorFinanceiro = null;
@@ -523,6 +609,7 @@ export default {
           this.quantidadeKgMateriaPrima = null;
           this.fornecedor = null;
 
+          this.loadingFinance = !this.loadingFinance;
           return this.$refs.alert.mostrarAlerta(
             "success",
             "check_circle",
@@ -531,6 +618,7 @@ export default {
           );
         })
         .catch((error) => {
+          this.loadingFinance = !this.loadingFinance;
           console.error("Erro ao registrar financeiro: ", error);
           this.refs.alert.mostrarAlerta("warning", "error", "Erro", error.response.data.message);
         });
@@ -548,6 +636,7 @@ export default {
 
       const currentDate = new Date();
       currentDate.setHours(currentDate.getHours() - 3);
+
       let data = {
         material_id: this.pedido.produto,
         quantidade: this.pedido.quantidade,
@@ -559,10 +648,9 @@ export default {
         valor: this.pedido.valor,
       };
 
-      console.log(data);
-
+      this.loadingPedido = !this.loadingPedido;
       axios
-        .post(`${ip}/pedido/post-pedido`, data)
+        .post(`${ip}/pedido/post-pedido`, data, {withCredentials: true})
         .then((response) => {
           this.pedido.produto = "";
           this.pedido.quantidade = null;
@@ -570,6 +658,7 @@ export default {
           this.pedido.data = "";
           this.pedido.valor = null;
 
+          this.loadingPedido = !this.loadingPedido;
           return this.$refs.alert.mostrarAlerta(
             "success",
             "check_circle",
@@ -578,6 +667,7 @@ export default {
           );
         })
         .catch((error) => {
+          this.loadingPedido = !this.loadingPedido;
           console.error("Erro ao registrar pedido: ", error);
           return this.$refs.alert.mostrarAlerta(
             "warning",
@@ -585,6 +675,32 @@ export default {
             "Erro",
             error.response.data.message
           );
+        });
+    },
+
+    fetchClients() {
+      axios
+        .get(`${ip}/pedido/get-clients`, {withCredentials: true})
+        .then((response) => {
+          response.data.forEach((cliente) => {
+            this.clientes.push(cliente.cliente);
+          });
+        })
+        .catch((error) => {
+          console.error("Erro ao consultar clientes: ", error);
+        });
+    },
+
+    fetchFornecedores() {
+      axios
+        .get(`${ip}/estoque/get-fornecedores`, {withCredentials: true})
+        .then((response) => {
+          response.data.forEach((fornecedor) => {
+            this.fornecedores.push(fornecedor.fornecedor);
+          });
+        })
+        .catch((error) => {
+          console.error("Erro ao consultar fornecedores: ", error);
         });
     },
   },
@@ -597,6 +713,7 @@ export default {
 }
 
 .form {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 20px;
