@@ -36,11 +36,12 @@
                   label="Usuário/CPF"
                   variant="outlined"
                   color="success"
-                  v-model="user"
+                  v-model="userCpf"
                   clearable
                 ></v-text-field>
 
                 <v-text-field
+                  @keyup.enter="login"
                   :rules="[required]"
                   type="password"
                   label="Senha"
@@ -52,15 +53,98 @@
 
                 <v-btn
                   @click="login"
+                  :disabled="!password || !userCpf"
                   class="mb-0 bg-gradient-danger btn-md w-100 null my-4 mb-2"
                   color="success"
+                  :loading="loadingLogin"
                 >
                   Entrar
+                  <template v-slot:loader>
+                    <v-progress-circular indeterminate></v-progress-circular>
+                  </template>
                 </v-btn>
 
-                <div class="forgot d-flex flex-column justify-content-center align-items-center">
-                  <p class="m-0">Esqueceu a Senha?</p>
-                  <span class="m-0 text-danger" role="button"> Recuperar</span>
+                <div class="forgot d-flex flex-row justify-content-center align-items-center">
+                  <p class="m-0 mr-1">Esqueceu a Senha?</p>
+
+                  <v-dialog max-width="400">
+                    <template v-slot:activator="{ props: activatorProps }">
+                      <span class="m-0 text-danger" role="button" v-bind="activatorProps">
+                        Recuperar
+                      </span>
+                    </template>
+
+                    <template v-slot:default="{ isActive }">
+                      <v-card>
+                        <v-card-title
+                          class="bg-danger d-flex justify-content-between align-items-center rounded text-white text-center text-bold m-3"
+                        >
+                          Recuperar Senha
+                          <i
+                            class="mdi mdi-close-circle fs-3"
+                            role="button"
+                            @click="isActive.value = false"
+                          ></i
+                        ></v-card-title>
+
+                        <v-card-text>
+                          <v-text-field
+                            v-model="recoverCpf"
+                            required
+                            :rules="[required]"
+                            variant="outlined"
+                            color="success"
+                            label="CPF"
+                            @update:modelValue="checkRecoverCpf"
+                          />
+
+                          <div v-if="loading" class="d-flex justify-content-center">
+                            <v-progress-circular
+                              indeterminate
+                              :size="90"
+                              :width="6"
+                            ></v-progress-circular>
+                          </div>
+
+                          <div v-if="validCpf">
+                            <v-text-field
+                              type="password"
+                              v-model="newPassword"
+                              required
+                              :rules="[required]"
+                              variant="outlined"
+                              color="success"
+                              label="Nova Senha"
+                            />
+                            <v-text-field
+                              type="password"
+                              v-model="repeatNewPassword"
+                              required
+                              :rules="[required]"
+                              variant="outlined"
+                              color="success"
+                              label="Repitir Senha"
+                            />
+                          </div>
+
+                          <v-btn
+                            @click="recoverPassword"
+                            :disabled="!validCpf"
+                            :loading="loadingNewPassword"
+                            block
+                            variant="flat"
+                            color="danger"
+                          >
+                            Recuperar
+
+                            <template v-slot:loader>
+                              <v-progress-linear indeterminate></v-progress-linear>
+                            </template>
+                          </v-btn>
+                        </v-card-text>
+                      </v-card>
+                    </template>
+                  </v-dialog>
                 </div>
               </v-card-text>
             </v-card>
@@ -81,7 +165,7 @@
               </v-card-title>
 
               <v-card-text>
-                <h5 v-if="usuarioLogado" class="text-center">{{ usuarioLogado.username }}</h5>
+                <p v-if="usuarioLogado" class="text-center fs-5">{{ usuarioLogado.username }}</p>
                 <v-btn
                   @click="logout"
                   class="mb-0 bg-gradient-danger text-white btn-md w-100 null my-4 mb-2"
@@ -116,14 +200,23 @@ import AlertComponent from "./Alert.vue";
 export default {
   name: "NavBar",
   components: { AlertComponent },
+  emits: ["toggle-sidebar"],
 
   data() {
     return {
       sideNav: false,
-      user: null,
+      userCpf: null,
       password: null,
 
       usuarioLogado: null,
+
+      loadingLogin: false,
+      loadingNewPassword: false,
+      loading: false,
+      validCpf: false,
+      recoverCpf: null,
+      newPassword: null,
+      repeatNewPassword: null,
     };
   },
 
@@ -160,17 +253,44 @@ export default {
 
     login() {
       const data = {
-        userCpf: this.user,
+        userCpf: this.userCpf,
         password: this.password,
       };
 
+      this.loadingLogin = !this.loadingLogin;
       axios
-        .post(`${ip}/auth/login`, data)
+        .post(`${ip}/auth/login`, data, { withCredentials: true })
         .then((response) => {
           const token = response.data.token;
           sessionStorage.setItem("token", token);
 
-          console.log(response.data);
+          this.$refs.alert.mostrarAlerta(
+            "success",
+            "check_circle",
+            "Sucesso",
+            response.data.message
+          );
+
+          this.loadingLogin = !this.loadingLogin;
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        })
+        .catch((error) => {
+          this.loadingLogin = !this.loadingLogin;
+          console.error("Erro ao fazer login", error);
+          this.$refs.alert.mostrarAlerta("warning", "warning", "Erro", error.response.data.message);
+        });
+    },
+
+    logout() {
+      sessionStorage.removeItem("token");
+      this.usuarioLogado = null;
+
+      axios
+        .post(`${ip}/auth/logout`, {}, { withCredentials: true })
+        .then((response) => {
+          console.log(response.data.message);
           this.$refs.alert.mostrarAlerta(
             "success",
             "check_circle",
@@ -180,27 +300,73 @@ export default {
 
           setTimeout(() => {
             window.location.reload();
-          }, 1500);
+          }, 1000);
         })
         .catch((error) => {
-          console.error("Erro ao fazer login", error);
+          console.error("Erro ao fazer logout", error);
           this.$refs.alert.mostrarAlerta("warning", "warning", "Erro", error.response.data.message);
         });
     },
 
-    logout() {
-      sessionStorage.removeItem("token");
-      this.usuarioLogado = null;
-      this.$refs.alert.mostrarAlerta(
-        "success",
-        "check_circle",
-        "Sucesso",
-        "Logout efetuado com sucesso"
-      );
+    checkRecoverCpf() {
+      if (this.recoverCpf.length === 11) {
+        this.loading = !this.loading;
+        axios
+          .post(`${ip}/auth/check-recover-cpf`, {
+            cpf: this.recoverCpf,
+          })
+          .then((response) => {
+            this.loading = !this.loading;
+            this.validCpf = true;
+          })
+          .catch((error) => {
+            this.loading = !this.loading;
+            console.error("Erro ao verificar cpf", error);
+            this.$refs.alert.mostrarAlerta(
+              "warning",
+              "warning",
+              "Erro",
+              error.response.data.message
+            );
+          });
+      }
+    },
 
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
+    recoverPassword() {
+      if (!this.newPassword || !this.repeatNewPassword || !this.recoverCpf) {
+        return this.$refs.alert.mostrarAlerta(
+          "warning",
+          "warning",
+          "Erro",
+          "Preencha todos os campos"
+        );
+      }
+
+      this.loadingNewPassword = !this.loadingNewPassword;
+      axios
+        .post(`${ip}/auth/recover`, {
+          cpf: this.recoverCpf,
+          newPassword: this.newPassword,
+          repeatNewPassword: this.repeatNewPassword,
+        })
+        .then((response) => {
+          this.loadingNewPassword = !this.loadingNewPassword;
+          this.$refs.alert.mostrarAlerta(
+            "success",
+            "check_circle",
+            "Sucesso",
+            response.data.message
+          );
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        })
+        .catch((error) => {
+          this.loadingNewPassword = !this.loadingNewPassword;
+          console.error("Erro ao recuperar senha", error);
+          this.$refs.alert.mostrarAlerta("warning", "warning", "Erro", error.response.data.message);
+        });
     },
 
     required(v) {
