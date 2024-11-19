@@ -1,13 +1,14 @@
 import { Router } from "express";
 import pool from "../config/db/connection.js";
+import checkToken from "../utils/checkToken.js";
 
 const router = Router();
 
-router.post("/post-pedido", async (req, res, next) => {
+router.post("/post-pedido", checkToken, async (req, res, next) => {
   try {
     let { material_id, quantidade, unidade, saida, data, username, cliente, valor } = req.body;
 
-    //Verificar disponibilidade de material
+    // Verificar disponibilidade de material
     const checkEstque = await pool.query(
       `
 			SELECT
@@ -52,14 +53,52 @@ router.post("/post-pedido", async (req, res, next) => {
         unidade,
         saida,
         data,
-        Number(valor) / Number(quantidade),
-        username,
         valor,
+        username,
+        Number(valor) * Number(quantidade),
         postPedido.rows[0].id,
       ]
     );
 
+    if (updateEstoque.rows.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Erro ao criar pedido. Verifique as informações e tente novamente." });
+    }
+
+    const updateFinanceiro = await pool.query(
+      `
+			INSERT INTO reciplast.financeiro (descricao, valor, data, user_create, metodo_pagamento, tipo, categoria_id)
+			VALUES ('Venda de ${quantidade}Kg de ${
+        material_id === 4 ? "Grão de Plástico Reciplast" : "Sacola de Plástico"
+      }',
+			$1, $2, $3, 'PIX', 'receita', 1)
+			RETURNING *
+		`,
+      [Number(valor) * Number(quantidade), data, username]
+    );
+
+    if (updateFinanceiro.rows.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Erro ao criar pedido. Verifique as informações e tente novamente." });
+    }
+
     res.status(201).json({ message: "Pedido concluído com sucesso.", pedido: postPedido.rows[0] });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/get-clients", checkToken, async (req, res, next) => {
+  try {
+    const clients = await pool.query(
+      `SELECT cliente 
+			FROM reciplast.pedidos
+			GROUP BY cliente`
+    );
+
+    res.status(200).json(clients.rows);
   } catch (error) {
     next(error);
   }
