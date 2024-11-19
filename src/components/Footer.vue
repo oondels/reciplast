@@ -2,7 +2,7 @@
   <footer class="footer">
     <div class="footer-content">
       <p>© 2024 Reciplast. Todos os direitos reservados.</p>
-
+			<p>CNPJ: <strong>48.946.605/0001-04</strong></p>
       <p>
         Desenvolvido por <a href="https://hendriusfelix.com.br/" target="_blank">Hendrius Félix</a>
       </p>
