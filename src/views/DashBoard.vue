@@ -2,6 +2,109 @@
   <div class="dashboard-container">
     <h1 class="text-center space">DashBoard de Gerenciamento</h1>
 
+    <v-expansion-panels>
+      <v-expansion-panel>
+        <v-expansion-panel-title class="fs-5 text-info">
+          <i class="mdi mdi-file-document-outline mr-2"></i> Detalhamento de Indicadores
+        </v-expansion-panel-title>
+
+        <v-expansion-panel-text>
+          <div class="card">
+            <div class="card-header">Baixar Indicadores</div>
+            <div class="card-body">
+              <p class="card-text">
+                Faça download dos indicadores de produção, estoque e financeiro para análise
+                detalhada.
+              </p>
+
+              <div class="container">
+                <!-- Opções  e Período -->
+                <div class="row">
+                  <div class="col-12 col-md-4">
+                    <v-combobox
+                      clearable
+                      label="Categoria"
+                      v-model="reportCategory"
+                      :items="['Financeiro', 'Produção', 'Estoque']"
+                    />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <v-text-field
+                      v-model="reportData.dataInicial"
+                      label="Data Inicial"
+                      type="date"
+                    />
+                  </div>
+                  <div class="col-12 col-md-4">
+                    <v-text-field v-model="reportData.dataFinal" label="Data Final" type="date" />
+                  </div>
+                </div>
+
+                <!-- Detalhes -->
+                <div class="row" v-if="reportCategory">
+                  <div class="col-12 col-md-6">
+                    <v-combobox
+                      clearable
+                      label="Detalhes"
+                      :items="reportDetails[reportCategory].items"
+                      v-model="reportData.categoria"
+                      :disabled="reportCategory === 'Financeiro' && !!reportData.detalhe"
+                    />
+                  </div>
+                  <div class="col-12 col-md-6">
+                    <v-combobox
+                      clearable
+                      label="Detalhes"
+                      :disabled="reportCategory === 'Financeiro' && !!reportData.categoria"
+                      :items="reportDetails[reportCategory].details"
+                      v-model="reportData.detalhe"
+                    />
+                  </div>
+                </div>
+
+                <!-- More Details -->
+                <div
+                  class="row"
+                  v-if="
+                    reportDetails[reportCategory] &&
+                    reportDetails[reportCategory].moreDetails &&
+                    reportCategory
+                  "
+                >
+                  <div class="col-12">
+                    <v-combobox
+                      :disabled="reportCategory === 'Produção' && !reportData.detalhe"
+                      clearable
+                      label="Mais Detalhes"
+                      :items="reportDetails[reportCategory].moreDetails"
+                      v-model="reportData.moreDetails"
+                    />
+                  </div>
+                </div>
+
+                <!-- Download -->
+                <div class="row">
+                  <v-btn
+                    @click="fetchReportData"
+                    variant="flat"
+                    color="info"
+                    prepend-icon="mdi mdi-download"
+                    :disabled="downloadReportConditions()"
+                    :loading="loadingReport"
+                  >
+                    Baixar
+                    <template v-slot:loader>
+                      <v-progress-linear indeterminate></v-progress-linear>
+                    </template>
+                  </v-btn>
+                </div>
+              </div>
+            </div>
+          </div>
+        </v-expansion-panel-text>
+      </v-expansion-panel>
+    </v-expansion-panels>
+
     <div class="charts-container">
       <h3 class="dashboard-title">Produção Mensal</h3>
       <div class="min-charts-fardo space">
@@ -265,18 +368,24 @@
     </div>
     <Footer />
   </div>
+
+  <alert ref="alert" />
 </template>
 
 <script>
+import Alert from "@/components/Alert.vue";
 import ApexChart from "@/components/ApexChart.vue";
 import Footer from "@/components/Footer.vue";
 import axios from "axios";
 import ApexCharts from "vue3-apexcharts";
 import ip from "../ip";
 
+import { saveAs } from "file-saver";
+import * as XLSX from "xlsx";
+
 export default {
   name: "DashBoard",
-  components: { ApexChart, ApexCharts, Footer },
+  components: { ApexChart, ApexCharts, Footer, Alert },
 
   data() {
     return {
@@ -285,26 +394,13 @@ export default {
           id: "vuechart-example",
         },
         xaxis: {
-          categories: [
-            "Jan",
-            "Feb",
-            "Mar",
-            "Apr",
-            "May",
-            "Jun",
-            "Jul",
-            "Aug",
-            "Sep",
-            "Oct",
-            "Nov",
-            "Dec",
-          ],
+          categories: [],
         },
       },
       estoqueGeralSeries: [
         {
           name: "Sales",
-          data: [30, 40, 35, 50, 49, 60, 70, 91, 125, 100, 120, 150],
+          data: [],
         },
       ],
       estoqueIndividual: [],
@@ -324,6 +420,43 @@ export default {
         "Grão de Plástico": "mdi mdi-grain fs-5",
         "Grão de Plástico Reciplast": "mdi mdi-grain fs-5",
       },
+
+      reportDetails: {
+        // Feito
+        Financeiro: {
+          items: [
+            "Todos",
+            "Vendas",
+            "Compra de Matéria-prima",
+            "Salários",
+            "Energia Elétrica",
+            "Manutenção",
+            "Impostos",
+          ],
+          details: ["Receita", "Despesa"],
+          moreDetails: ["Metodo Pagamento"],
+        },
+        // Feito
+        Produção: {
+          items: ["Todos", "Sacolas", "Grãos"],
+          details: ["Produção", "Venda"],
+          moreDetails: ["Fardo", "Cliente"],
+        },
+        Estoque: {
+          items: ["Todos", "Plástico", "Sacola de Plástico", "Grãos"],
+          details: ["Entrada", "Saida"],
+          moreDetails: ["Fornecedor"],
+        },
+      },
+			reportCategory: "",
+      reportData: {
+        dataInicial: null,
+        dataFinal: null,
+        categoria: "",
+        detalhe: "",
+        moreDetails: "",
+      },
+      loadingReport: false,
     };
   },
 
@@ -338,7 +471,7 @@ export default {
   methods: {
     getEstoqueGeral() {
       axios
-        .get(`${ip}/chart/estoqueGeral-chart-data`)
+        .get(`${ip}/chart/estoqueGeral-chart-data`, {withCredentials: true})
         .then((response) => {
           this.estoqueGeralOp = response.data.options;
           this.estoqueGeralSeries = response.data.series;
@@ -350,7 +483,7 @@ export default {
 
     getEstoqueIndividual() {
       axios
-        .get(`${ip}/chart/estoqueIndividual-chart-data`)
+        .get(`${ip}/chart/estoqueIndividual-chart-data`, {withCredentials: true})
         .then((response) => {
           this.estoqueIndividual = response.data;
         })
@@ -361,10 +494,9 @@ export default {
 
     getProducaoFardo() {
       axios
-        .get(`${ip}/chart/producao-mensal`)
+        .get(`${ip}/chart/producao-mensal`, {withCredentials: true})
         .then((response) => {
           this.producaoMensal = response.data;
-          console.log(this.producaoMensal);
         })
         .catch((error) => {
           console.error("Erro ao buscar dados de produção mensal: ", error);
@@ -373,7 +505,7 @@ export default {
 
     stockHistory(material) {
       axios
-        .get(`${ip}/chart/stock-history/${material}`)
+        .get(`${ip}/chart/stock-history/${material}`, {withCredentials: true})
         .then((response) => {
           if (response.data && response.data.series && response.data.options) {
             this.detailedStockHistory = response.data;
@@ -388,7 +520,7 @@ export default {
 
     generalExpenses() {
       axios
-        .get(`${ip}/chart/general-expenses`)
+        .get(`${ip}/chart/general-expenses`, {withCredentials: true})
         .then((response) => {
           this.generalExpensesData = response.data;
         })
@@ -399,7 +531,7 @@ export default {
 
     detailedExpenses() {
       axios
-        .get(`${ip}/chart/detailed-expenses`)
+        .get(`${ip}/chart/detailed-expenses`, {withCredentials: true})
         .then((response) => {
           this.detailedExpensesData = response.data;
         })
@@ -410,7 +542,7 @@ export default {
 
     expensesHistory() {
       axios
-        .get(`${ip}/chart/expenses-history`)
+        .get(`${ip}/chart/expenses-history`, {withCredentials: true})
         .then((response) => {
           this.expensesHistoryData = response.data;
         })
@@ -421,7 +553,7 @@ export default {
 
     detailedSellHistory() {
       axios
-        .get(`${ip}/chart/detailed-sell-history`)
+        .get(`${ip}/chart/detailed-sell-history`, {withCredentials: true})
         .then((response) => {
           this.detailedSellHistoryData = response.data;
         })
@@ -432,10 +564,9 @@ export default {
 
     productionHistory() {
       axios
-        .get(`${ip}/chart/production-history`)
+        .get(`${ip}/chart/production-history`, {withCredentials: true})
         .then((response) => {
           this.productionHistoryData = response.data;
-          console.log(this.productionHistoryData);
         })
         .catch((error) => {
           console.error("Erro ao buscar dados de produção: ", error);
@@ -446,6 +577,181 @@ export default {
       const estoque = this.estoqueIndividual.find((estoque) => estoque.nome === material);
       return estoque ? estoque : 0;
     },
+
+    downloadReportConditions() {
+      return (
+        // Verifica se a data foi especificada
+        !this.reportData.dataInicial ||
+        !this.reportData.dataFinal ||
+        // Filtro de Cliente + Produção não retorna nada
+        (this.reportData.moreDetails === "Cliente" && this.reportData.detalhe === "Produção") ||
+        // Filtro sem especificar tipo de saida retorna dado sem relevância
+        // (this.reportCategory && !this.reportData.detalhe) ||
+        // Filtro de Fornecedor + Saida não retorna valor relevante
+        (this.reportData.moreDetails === "Fornecedor" && this.reportData.detalhe === "Saida")
+      );
+    },
+
+    fetchReportData() {
+      const reportUrl = {
+        Financeiro: `${ip}/report/financeiro/`,
+        Produção: `${ip}/report/producao/`,
+        Estoque: `${ip}/report/estoque/`,
+      };
+
+			this.loadingReport = !this.loadingReport;
+      axios
+        .get(reportUrl[this.reportCategory], {
+          params: this.reportData,
+        }, {withCredentials: true})
+        .then((response) => {
+          this.downloadReport(response.data);
+        })
+        .catch((error) => {
+					this.loadingReport = !this.loadingReport;
+          console.error("Erro ao baixar relatório: ", error);
+          return this.$refs.alert.mostrarAlerta(
+            "warning",
+            "error",
+            "Erro",
+            "Erro ao fazer download do relatório. Entre em contato com o suporte no botão de ajuda!"
+          );
+        });
+    },
+
+    downloadReport(data) {
+      const formateDate = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+      };
+
+      const formatDateTime = (dateString) => {
+        const date = new Date(dateString);
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const year = date.getFullYear();
+        const hours = String(date.getHours()).padStart(2, "0");
+        const minutes = String(date.getMinutes()).padStart(2, "0");
+        return `${day}-${month}-${year} ${hours}:${minutes}`;
+      };
+
+      const workBook = XLSX.utils.book_new();
+
+      let workSheetData = [
+        ["Relatório de Produção/Estoque/Financeiro"], // Título
+        [`Categoria: ${this.reportCategory}`], // Categoria
+        [`Período: ${this.reportData.dataInicial} - ${this.reportData.dataFinal}`], // Período
+        [], // Linha vazia
+      ];
+
+      if (this.reportCategory === "Financeiro") {
+        // Adiciona os Titulos das Colunas
+        workSheetData.push([
+          "Data",
+          "Categoria",
+          "Valor (R$)",
+          "Descrição",
+          "Tipo (Receita, Despesa)",
+          "Método de Pagamento",
+        ]);
+
+        // Adicionar os dados iterados
+        data.forEach((item) => {
+          workSheetData.push([
+            formatDateTime(item.data),
+            item.categoria,
+            item.valor_total,
+            item.descricao,
+            item.tipo ? item.tipo : "",
+            item.metodo_pagamento ? item.metodo_pagamento : "",
+          ]);
+        });
+      } else if (this.reportCategory === "Estoque") {
+        // Informações de Detalhamento
+        if (this.reportData.detalhe) {
+          workSheetData.push([`Detalhamento para ${this.reportData.detalhe} de materiais`]);
+        }
+        if (this.reportData.moreDetails) {
+          workSheetData.push([`Especificação de Detalhes para ${this.reportData.moreDetails}`]);
+        }
+        workSheetData.push(["Data", "Produto", "Quantidade (Kg)", "Fornecedor"]);
+
+        data.forEach((item) => {
+          workSheetData.push([
+            formatDateTime(item.data),
+            item.nome,
+            item.quantidade,
+            item.fornecedor ? item.fornecedor : "",
+          ]);
+        });
+      } else if (this.reportCategory === "Produção") {
+        // Informações de Detalhamento
+        if (this.reportData.detalhe) {
+          workSheetData.push([`Detalhamento para ${this.reportData.detalhe}`]);
+        }
+        if (this.reportData.moreDetails) {
+          workSheetData.push([`Especificação de Detalhes para ${this.reportData.moreDetails}`]);
+        }
+
+        workSheetData.push(["Data", "Produto", "Quantidade (Kg)", "Fardos (und)", "Cliente"]);
+
+        data.forEach((item) => {
+          workSheetData.push([
+            formatDateTime(item.data),
+            item.nome,
+            item.quantidade,
+            item.fardos ? item.fardos : "",
+            item.cliente ? item.cliente : "",
+          ]);
+        });
+      }
+
+      // Criar a planilha
+      const workSheet = XLSX.utils.aoa_to_sheet(workSheetData);
+
+      // Mesclar as células para o título principal
+      workSheet["!merges"] = [
+        { s: { r: 0, c: 0 }, e: { r: 0, c: 2 } }, // Mesclar título
+        { s: { r: 1, c: 0 }, e: { r: 1, c: 2 } }, // Mesclar categoria
+        { s: { r: 2, c: 0 }, e: { r: 2, c: 2 } }, // Mesclar período
+      ];
+
+      // Ajustar largura das colunas
+      workSheet["!cols"] = [
+        { wch: 15 }, // Largura para Data
+        { wch: 25 }, // Largura para Produto
+        { wch: 20 }, // Largura para Quantidade
+      ];
+
+      // Adicionar a planilha ao workbook
+      XLSX.utils.book_append_sheet(workBook, workSheet, "Relatório");
+
+      // Gerar o arquivo Excel
+      const xlsxBuffer = XLSX.write(workBook, { bookType: "xlsx", type: "array" });
+      const currentDate = new Date();
+
+      saveAs(
+        new Blob([xlsxBuffer], { type: "application/octet-stream" }),
+        `Relatório-${this.reportCategory}-${formateDate(currentDate)}.xlsx`
+      );
+
+			this.loadingReport = !this.loadingReport;
+			this.resetReport()
+    },
+
+		resetReport() {
+			this.reportCategory = ""
+			this.reportData = {
+				dataInicial: null,
+				dataFinal: null,
+				categoria: "",
+				detalhe: "",
+				moreDetails: "",
+			};
+		},
   },
 };
 </script>

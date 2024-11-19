@@ -11,6 +11,8 @@ import ChartRoutes from "./routes/charts.js";
 import EstoqueRoutes from "./routes/estoque.js";
 import FinaneiroRoutes from "./routes/financeiro.js";
 import Pedidos from "./routes/pedidos.js";
+import Report from "./routes/report.js";
+import EmailService from "./services/EmailService.js";
 
 import checkToken from "./utils/checkToken.js";
 
@@ -24,7 +26,10 @@ const io = new Server(server, {
   },
 });
 
-app.use(cors());
+app.use(cors({
+	origin: "http://localhost:8080",
+	credentials: true
+}));
 app.use(express.json());
 app.use(cookieParser());
 app.use("/auth", AuthRoutes);
@@ -32,6 +37,8 @@ app.use("/estoque", EstoqueRoutes)
 app.use("/financeiro", FinaneiroRoutes)
 app.use("/chart", ChartRoutes)
 app.use("/pedido", Pedidos)
+app.use("/report", Report)
+app.use("/email", EmailService);
 
 io.on("connection", (socket) => {
   console.log("Novo cliente conectado:", socket.id);
@@ -55,7 +62,7 @@ app.use((error, req, res, next) => {
   console.log(`Erro na rota ${req.method} ${req.originalUrl}: ${error}`);
 
   res.status(500).json({
-    message: "Erro interno do servidor. Entre em contato com o suporte (75) 982466703",
+    message: "Erro interno do servidor. Entre em contato com o suporte no botão de ajuda!",
     error: process.env.NODE_ENV === "development" ? error.message : undefined,
   });
 });
