@@ -23,13 +23,13 @@ const meses = {
 router.get("/estoqueGeral-chart-data", checkToken, async (req, res, next) => {
   try {
     let query = `
-			SELECT 
+			SELECT
 				p.nome, p.tag, p.type,
-				SUM(CASE WHEN e.entrada THEN e.quantidade ELSE 0 END) - 
+				SUM(CASE WHEN e.entrada THEN e.quantidade ELSE 0 END) -
     		SUM(CASE WHEN e.saida THEN e.quantidade ELSE 0 END) AS "quantidade"
 			FROM
 				reciplast.produtos p
-			LEFT JOIN 
+			LEFT JOIN
 				reciplast.estoque e ON p.id = e.material_id
 			GROUP BY
 				p.nome, p.tag, p.type
@@ -68,13 +68,13 @@ router.get("/estoqueGeral-chart-data", checkToken, async (req, res, next) => {
 router.get("/estoqueIndividual-chart-data", checkToken, async (req, res, next) => {
   try {
     let query = `
-			SELECT 
+			SELECT
 				p.nome, p.tag, p.type, p.id,
-				SUM(CASE WHEN e.entrada THEN e.quantidade ELSE 0 END) - 
+				SUM(CASE WHEN e.entrada THEN e.quantidade ELSE 0 END) -
     		SUM(CASE WHEN e.saida THEN e.quantidade ELSE 0 END) AS "quantidade"
 			FROM
 				reciplast.produtos p
-			LEFT JOIN 
+			LEFT JOIN
 				reciplast.estoque e ON p.id = e.material_id
 			GROUP BY
 				p.nome, p.tag, p.type, p.id
@@ -95,8 +95,8 @@ router.get("/stock-history/:materialId", checkToken,  async (req, res, next) => 
 
     const query = await pool.query(
       `
-		SELECT 
-			p.nome, p.tag,	
+		SELECT
+			p.nome, p.tag,
 			SUM(e.quantidade) AS quantidade, e.entrada, e.saida, e.data AS data
 		FROM
 		 	reciplast.produtos p
@@ -167,7 +167,7 @@ router.get("/stock-history/:materialId", checkToken,  async (req, res, next) => 
 router.get("/general-expenses", checkToken, async (req, res, next) => {
   try {
     const query = `
-			SELECT 
+			SELECT
 				f.tipo, SUM(f.valor) AS valor
 			FROM
 				reciplast.financeiro_categoria c
@@ -207,7 +207,7 @@ router.get("/general-expenses", checkToken, async (req, res, next) => {
 router.get("/detailed-expenses", checkToken, async (req, res, next) => {
   try {
     const queryDespesa = `
-			SELECT 
+			SELECT
 				c.categoria, SUM(f.valor) AS valor
 			FROM
 				reciplast.financeiro_categoria c
@@ -222,7 +222,7 @@ router.get("/detailed-expenses", checkToken, async (req, res, next) => {
     const resultDespesa = await pool.query(queryDespesa);
 
     const queryReceita = `
-			SELECT 
+			SELECT
 				c.categoria, SUM(f.valor) AS valor
 			FROM
 				reciplast.financeiro_categoria c
@@ -349,8 +349,8 @@ router.get("/expenses-history", checkToken, async (req, res, next) => {
 router.get("/detailed-sell-history", checkToken, async (req, res, next) => {
   try {
     const query = await pool.query(`
-			SELECT 
-				SUM(e.total_custo) as valor, EXTRACT(MONTH FROM e.data) as mes, 
+			SELECT
+				SUM(e.total_custo) as valor, EXTRACT(MONTH FROM e.data) as mes,
 				e.saida, p.nome
 			FROM
 				reciplast.estoque e
@@ -412,17 +412,17 @@ router.get("/detailed-sell-history", checkToken, async (req, res, next) => {
 router.get("/production-history", checkToken, async (req, res, next) => {
   try {
     const query = await pool.query(`
-			SELECT 
+			SELECT
 				p.nome, SUM(e.quantidade) as total_quantidade, EXTRACT(MONTH FROM e.data) as mes
-			FROM 
+			FROM
 				reciplast.produtos p
-			LEFT JOIN 	
+			LEFT JOIN
 				reciplast.estoque e ON p.id = e.material_id
 			WHERE
 				p.type = 'produto-final' AND EXTRACT(YEAR FROM e.data) = EXTRACT(YEAR FROM CURRENT_DATE)
 			GROUP BY
 				p.nome, EXTRACT(MONTH FROM e.data)
-			ORDER BY	
+			ORDER BY
 				mes ASC
 		`);
 
@@ -493,14 +493,14 @@ router.get("/production-history", checkToken, async (req, res, next) => {
 router.get("/producao-mensal", checkToken, async (req, res, next) => {
   try {
     const query = await pool.query(`
-			SELECT 
+			SELECT
 				p.nome, p.type, COUNT(e.quantidade) as fardos, p.id
 			FROM
 				reciplast.produtos p
 			LEFT JOIN
 				reciplast.estoque e ON p.id = e.material_id
 			WHERE
-				p.type = 'produto-final' AND 
+				p.type = 'produto-final' AND
 				EXTRACT(YEAR FROM e.data) = EXTRACT(YEAR FROM CURRENT_DATE) AND
 				EXTRACT(MONTH FROM e.data) = EXTRACT(MONTH FROM CURRENT_DATE) AND
 				e.entrada = true AND e.saida = false

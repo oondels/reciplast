@@ -18,7 +18,7 @@ router.post("/send-help-email", checkToken, async (req, res, next) => {
   try {
     const { problem, description } = req.body;
 
-    const message = await transporter.sendMail({
+    await transporter.sendMail({
       to: "hendriusfelix.dev@gmail.com",
       subject: `⚠️Ajuda Reciplast⚠️ - ${problem}`,
       html: `
@@ -39,11 +39,18 @@ router.post("/send-help-email", checkToken, async (req, res, next) => {
       </div>
   </div>
 `,
-    });
-
-		return res.status(200).json({ message: "Email enviado com sucesso. Responderei assim que possível." });
+    })
+		.then(() => {
+			console.log("Email sent");
+			return res.status(200).json({ message: "Email enviado com sucesso. Responderei assim que possível." });
+		})
+		.catch(error => {
+			console.error("Erro ao enviar email: ", error);
+			return res.status(500).json({ message: "Erro ao enviar email. Por favor, tente novamente" });
+		})
   } catch (error) {
-    next(error);
+    // next(error);
+		console.error(error);
   }
 });
 

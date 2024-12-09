@@ -17,7 +17,7 @@
       <div class="info-card">
         <i class="icon mdi mdi-calendar"></i>
         <h3>Fundação</h3>
-        <p>Fundada em 2010</p>
+        <p>Fundada em 2022</p>
       </div>
       <div class="info-card">
         <i class="icon mdi mdi-leaf"></i>

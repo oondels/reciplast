@@ -127,7 +127,7 @@ export default {
         .post(`${ip}/email/send-help-email`, {
           problem: this.problema,
           description: this.descricao,
-        })
+        }, { withCredentials: true })
         .then((response) => {
           this.loadingEmail = !this.loadingEmail;
           this.$refs.alert.mostrarAlerta(

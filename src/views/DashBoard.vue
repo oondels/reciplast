@@ -448,7 +448,7 @@ export default {
           moreDetails: ["Fornecedor"],
         },
       },
-			reportCategory: "",
+      reportCategory: "",
       reportData: {
         dataInicial: null,
         dataFinal: null,
@@ -471,7 +471,7 @@ export default {
   methods: {
     getEstoqueGeral() {
       axios
-        .get(`${ip}/chart/estoqueGeral-chart-data`, {withCredentials: true})
+        .get(`${ip}/chart/estoqueGeral-chart-data`, { withCredentials: true })
         .then((response) => {
           this.estoqueGeralOp = response.data.options;
           this.estoqueGeralSeries = response.data.series;
@@ -483,7 +483,7 @@ export default {
 
     getEstoqueIndividual() {
       axios
-        .get(`${ip}/chart/estoqueIndividual-chart-data`, {withCredentials: true})
+        .get(`${ip}/chart/estoqueIndividual-chart-data`, { withCredentials: true })
         .then((response) => {
           this.estoqueIndividual = response.data;
         })
@@ -494,9 +494,11 @@ export default {
 
     getProducaoFardo() {
       axios
-        .get(`${ip}/chart/producao-mensal`, {withCredentials: true})
+        .get(`${ip}/chart/producao-mensal`, { withCredentials: true })
         .then((response) => {
           this.producaoMensal = response.data;
+					console.log(this.producaoMensal);
+
         })
         .catch((error) => {
           console.error("Erro ao buscar dados de produção mensal: ", error);
@@ -505,7 +507,7 @@ export default {
 
     stockHistory(material) {
       axios
-        .get(`${ip}/chart/stock-history/${material}`, {withCredentials: true})
+        .get(`${ip}/chart/stock-history/${material}`, { withCredentials: true })
         .then((response) => {
           if (response.data && response.data.series && response.data.options) {
             this.detailedStockHistory = response.data;
@@ -520,7 +522,7 @@ export default {
 
     generalExpenses() {
       axios
-        .get(`${ip}/chart/general-expenses`, {withCredentials: true})
+        .get(`${ip}/chart/general-expenses`, { withCredentials: true })
         .then((response) => {
           this.generalExpensesData = response.data;
         })
@@ -531,7 +533,7 @@ export default {
 
     detailedExpenses() {
       axios
-        .get(`${ip}/chart/detailed-expenses`, {withCredentials: true})
+        .get(`${ip}/chart/detailed-expenses`, { withCredentials: true })
         .then((response) => {
           this.detailedExpensesData = response.data;
         })
@@ -542,7 +544,7 @@ export default {
 
     expensesHistory() {
       axios
-        .get(`${ip}/chart/expenses-history`, {withCredentials: true})
+        .get(`${ip}/chart/expenses-history`, { withCredentials: true })
         .then((response) => {
           this.expensesHistoryData = response.data;
         })
@@ -553,7 +555,7 @@ export default {
 
     detailedSellHistory() {
       axios
-        .get(`${ip}/chart/detailed-sell-history`, {withCredentials: true})
+        .get(`${ip}/chart/detailed-sell-history`, { withCredentials: true })
         .then((response) => {
           this.detailedSellHistoryData = response.data;
         })
@@ -564,7 +566,7 @@ export default {
 
     productionHistory() {
       axios
-        .get(`${ip}/chart/production-history`, {withCredentials: true})
+        .get(`${ip}/chart/production-history`, { withCredentials: true })
         .then((response) => {
           this.productionHistoryData = response.data;
         })
@@ -599,16 +601,17 @@ export default {
         Estoque: `${ip}/report/estoque/`,
       };
 
-			this.loadingReport = !this.loadingReport;
+      this.loadingReport = !this.loadingReport;
       axios
         .get(reportUrl[this.reportCategory], {
           params: this.reportData,
-        }, {withCredentials: true})
+          withCredentials: true,
+        })
         .then((response) => {
           this.downloadReport(response.data);
         })
         .catch((error) => {
-					this.loadingReport = !this.loadingReport;
+          this.loadingReport = !this.loadingReport;
           console.error("Erro ao baixar relatório: ", error);
           return this.$refs.alert.mostrarAlerta(
             "warning",
@@ -738,20 +741,20 @@ export default {
         `Relatório-${this.reportCategory}-${formateDate(currentDate)}.xlsx`
       );
 
-			this.loadingReport = !this.loadingReport;
-			this.resetReport()
+      this.loadingReport = !this.loadingReport;
+      this.resetReport();
     },
 
-		resetReport() {
-			this.reportCategory = ""
-			this.reportData = {
-				dataInicial: null,
-				dataFinal: null,
-				categoria: "",
-				detalhe: "",
-				moreDetails: "",
-			};
-		},
+    resetReport() {
+      this.reportCategory = "";
+      this.reportData = {
+        dataInicial: null,
+        dataFinal: null,
+        categoria: "",
+        detalhe: "",
+        moreDetails: "",
+      };
+    },
   },
 };
 </script>
