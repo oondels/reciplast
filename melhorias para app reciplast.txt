@@ -1,7 +1,9 @@
-colocar opção de tamanho de sacola ao realizar um pedido
-fardo da sacola é 20kg
+Fardo da sacola é 20kg
 
-sacola 
+Feito
+colocar opção de tamanho de sacola ao realizar um pedido
+Feito
+sacola
 p = 30x40
 p = 30x45
 m = 40x50
@@ -9,23 +11,20 @@ g = 50x60
 gg = 60x80
 exg = 70x90
 
+Feito
 saco lixo
 tam1 = 80x90
 tam2 = 90x100
 
-
+Feito
 Registro financeiro especificar por funcionário - (José Marcos, Gilmar Barbosa, Hermes Pereira, Messias Pereira, Cristiano Moreira, Luciano Batista Gomes, Luciano 2, Pedro, Matheus)
 
+Feito
+especificar qual serviço realizado no registro de gasto de manutenção, especificar qual maquina foi feita - (extrusora de balão, extrusora recuperadora, corte e solda, picotador, prensa, aglutinador)
 
 nos realatorios personalizados, mostrar valores
 
-especificar qual serviço realizado no registro de gasto de manutenção, especificar qual maquina foi feita - (extrusora de balão, extrusora recuperadora, corte e solda, picotador, prensa, aglutinador)
-
-
-
 - Colocar registro para acompanhamento de manutenção, ter historico e acompanhar as trocas
 Baixar os detalhes através do "Detalhamento de indicadores"
-
-
 
 - Nos pedidos adicionar opção de prestação de serviços para outras empresa, pegar as aparas (sobra de material) que sobram de outra empresa para fazer grão e devolver, cobrando a mão de obra

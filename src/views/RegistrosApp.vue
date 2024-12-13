@@ -84,7 +84,35 @@
                   required
                 ></v-select>
               </v-col>
+
+              <!-- Só exibe se for pedido de sacola -->
+              <v-col v-if="this.pedido.produto === 3" class="m-0">
+                <v-select
+                  v-model="pedido.tamanho"
+                  label="Tamanho da Sacola"
+                  :items="sacolaTamanho"
+                  item-title="label"
+                  item-value="value"
+                  variant="outlined"
+                  clearable
+                  required
+                ></v-select>
+              </v-col>
             </v-row>
+
+            <div v-if="this.pedido.produto === 3" class="row mx-2 d-flex align-items-center justify-content-center">
+              <!-- <p class="col-12 rounded-lg p-3 border border-2">teste</p> -->
+              <div class="legend shadow bg-yellow-lighten-4">
+                <div class="legend-title text-center fs-5">Legenda</div>
+                <div class="legend-item"><span>P:</span> 30X45</div>
+                <div class="legend-item"><span>M:</span> 40X50</div>
+                <div class="legend-item"><span>G:</span> 50X60</div>
+                <div class="legend-item"><span>GG:</span> 60X80</div>
+                <div class="legend-item"><span>XG:</span> 70X90</div>
+                <div class="legend-item"><span>Sacola de Lixo P:</span> 80X90</div>
+                <div class="legend-item"><span>Sacola de Lixo M:</span> 90X100</div>
+              </div>
+            </div>
 
             <!-- Campo de Quantidade -->
             <div class="col-12 d-flex flex-row flex-wrap">
@@ -183,8 +211,8 @@
 
       <div class="register d-flex flex-column justify-content-center align-items-center">
         <p class="m-3 p-2 alert alert-primary rounded">
-          Sessão designada para registro das despesas da empresa no decorrer do mês e registro de
-          compra de matéria prima.
+          Sessão designada para registro das despesas da empresa no decorrer do mês e registro de compra de matéria
+          prima.
         </p>
 
         <div class="col-12 d-flex flex-row flex-wrap">
@@ -200,6 +228,59 @@
             variant="outlined"
           />
 
+          <v-combobox
+            v-if="categoriaFinancerioSelecionada && categoriaFinancerioSelecionada.categoria === 'Salários'"
+            label="Selecione o Operador"
+            item-title="nome"
+            v-model="selectedEmployee"
+            :items="employees"
+            variant="outlined"
+            clearable
+            color="success"
+            class="col-md-6 mb-2"
+          />
+
+          <v-combobox
+            v-if="
+              categoriaFinancerioSelecionada &&
+              categoriaFinancerioSelecionada.categoria === 'Manutenção' &&
+              maintenanceServices.length &&
+              !newService
+            "
+            label="Serviço Realizado"
+            :items="maintenanceServices"
+            v-model="selectedService"
+            variant="solo"
+            color="success"
+            class="col-md-6 mb-2"
+          />
+
+          <v-text-field
+            v-if="
+              (categoriaFinancerioSelecionada &&
+                categoriaFinancerioSelecionada.categoria === 'Manutenção' &&
+                newService) ||
+              maintenanceServices.length === 0
+            "
+            label="Novo Serviço Realizado"
+            v-model="selectedService"
+            variant="solo-filled"
+            color="success"
+            class="col-md-6 mb-2"
+          />
+
+          <v-checkbox
+            class="col-12"
+            v-if="
+              categoriaFinancerioSelecionada &&
+              categoriaFinancerioSelecionada.categoria === 'Manutenção' &&
+              maintenanceServices.length
+            "
+            v-model="newService"
+            label="Novo Serviço?"
+          >
+          </v-checkbox>
+
           <v-text-field
             class="col-12 col-md-6 mb-2"
             color="success"
@@ -207,8 +288,7 @@
             :disabled="!categoriaFinancerioSelecionada"
             type="number"
             :label="
-              categoriaFinancerioSelecionada &&
-              categoriaFinancerioSelecionada.categoria === 'Compra de Matéria-prima'
+              categoriaFinancerioSelecionada && categoriaFinancerioSelecionada.categoria === 'Compra de Matéria-prima'
                 ? 'Valor por KG'
                 : 'Valor'
             "
@@ -219,8 +299,7 @@
         <div
           class="col-12"
           v-if="
-            categoriaFinancerioSelecionada &&
-            categoriaFinancerioSelecionada.categoria === 'Compra de Matéria-prima'
+            categoriaFinancerioSelecionada && categoriaFinancerioSelecionada.categoria === 'Compra de Matéria-prima'
           "
         >
           <v-combobox
@@ -234,12 +313,7 @@
             variant="outlined"
           />
 
-          <v-text-field
-            v-model="quantidadeKgMateriaPrima"
-            variant="outlined"
-            class="mr-2"
-            label="Quantidade (KG)"
-          />
+          <v-text-field v-model="quantidadeKgMateriaPrima" variant="outlined" class="mr-2" label="Quantidade (KG)" />
 
           <v-combobox
             v-if="!newFornecedor"
@@ -252,12 +326,7 @@
 
           <!-- Fornecedor Novo -->
           <v-checkbox v-model="newFornecedor" label="Novo Fornecedor?"></v-checkbox>
-          <v-text-field
-            v-if="newFornecedor"
-            v-model="fornecedor"
-            variant="outlined"
-            label="Novo Fornecedor"
-          />
+          <v-text-field v-if="newFornecedor" v-model="fornecedor" variant="outlined" label="Novo Fornecedor" />
         </div>
 
         <p v-if="categoriaFinancerioSelecionada" class="descricao-financeiro">
@@ -266,8 +335,7 @@
 
         <v-btn
           v-if="
-            categoriaFinancerioSelecionada &&
-            categoriaFinancerioSelecionada.categoria !== 'Compra de Matéria-prima'
+            categoriaFinancerioSelecionada && categoriaFinancerioSelecionada.categoria !== 'Compra de Matéria-prima'
           "
           color="success"
           :disabled="!valorFinanceiro"
@@ -284,16 +352,10 @@
         <!-- Botão para materia prima -->
         <v-btn
           v-if="
-            categoriaFinancerioSelecionada &&
-            categoriaFinancerioSelecionada.categoria === 'Compra de Matéria-prima'
+            categoriaFinancerioSelecionada && categoriaFinancerioSelecionada.categoria === 'Compra de Matéria-prima'
           "
           color="success"
-          :disabled="
-            !valorFinanceiro ||
-            !quantidadeKgMateriaPrima ||
-            !materialPrimaSelecionada ||
-            !fornecedor
-          "
+          :disabled="!valorFinanceiro || !quantidadeKgMateriaPrima || !materialPrimaSelecionada || !fornecedor"
           @click="postFinanceiro('materia-prima')"
           :loading="loadingFinance"
         >
@@ -400,7 +462,25 @@ export default {
         cliente: "",
         data: "",
         valor: null,
+        tamanho: null,
       },
+      employees: [],
+      selectedEmployee: null,
+
+      // Serviços de Manutenção
+      maintenanceServices: [],
+      selectedService: null,
+      newService: false,
+
+      sacolaTamanho: [
+        { label: "P", value: "30X45" },
+        { label: "M", value: "40X50" },
+        { label: "G", value: "50X60" },
+        { label: "GG", value: "60X80" },
+        { label: "XG", value: "70X90" },
+        { label: "Sacola de Lixo P", value: "80X90" },
+        { label: "Sacola de Lixo M", value: "90X100" },
+      ],
     };
   },
 
@@ -412,9 +492,22 @@ export default {
 
     this.fetchClients();
     this.fetchFornecedores();
+    this.fetchEmploeey();
+    this.fetchMaintenanceServices();
   },
 
   methods: {
+    fetchEmploeey() {
+      axios
+        .get(`${ip}/pedido/fetch-employee`)
+        .then((response) => {
+          this.employees = response.data;
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar funcionarios: ", error);
+        });
+    },
+
     decodeJwt() {
       let token = sessionStorage.getItem("token");
       if (token) {
@@ -424,7 +517,7 @@ export default {
 
     fecthFardoSacola() {
       axios
-        .get(`${ip}/estoque/fardo-produto/3`, {withCredentials: true})
+        .get(`${ip}/estoque/fardo-produto/3`, { withCredentials: true })
         .then((response) => {
           this.fardoSacola = response.data[0].producao;
         })
@@ -435,7 +528,7 @@ export default {
 
     fecthFardoGrao() {
       axios
-        .get(`${ip}/estoque/fardo-produto/4`, {withCredentials: true})
+        .get(`${ip}/estoque/fardo-produto/4`, { withCredentials: true })
         .then((response) => {
           this.fardoGrao = response.data[0].producao;
         })
@@ -446,7 +539,7 @@ export default {
 
     fetchProdutos() {
       axios
-        .get(`${ip}/estoque/get-produtos`, {withCredentials: true})
+        .get(`${ip}/estoque/get-produtos`, { withCredentials: true })
         .then((response) => {
           this.produtos = response.data;
           response.data.forEach((produto) => {
@@ -479,7 +572,7 @@ export default {
 
     fetchCategoriaFinanceiro() {
       axios
-        .get(`${ip}/financeiro/get-categoria`, {withCredentials: true})
+        .get(`${ip}/financeiro/get-categoria`, { withCredentials: true })
         .then((response) => {
           response.data.forEach((categoria) => {
             if (categoria.categoria !== "Vendas") {
@@ -504,12 +597,7 @@ export default {
       }
 
       if (!quantidade) {
-        return this.$refs.alert.mostrarAlerta(
-          "warning",
-          "warning",
-          "Erro",
-          "Selecione um fardo para continuar!"
-        );
+        return this.$refs.alert.mostrarAlerta("warning", "warning", "Erro", "Selecione um fardo para continuar!");
       }
 
       const currentDate = new Date();
@@ -530,28 +618,18 @@ export default {
 
       this.loadingProducao = !this.loadingProducao;
       axios
-        .post(`${ip}/estoque/post-produto-estoque`, data, {withCredentials: true})
+        .post(`${ip}/estoque/post-produto-estoque`, data, { withCredentials: true })
         .then((response) => {
           this.selectedFardoGrao = null;
           this.selectedFardoSacola = null;
 
           this.loadingProducao = !this.loadingProducao;
-          return this.$refs.alert.mostrarAlerta(
-            "success",
-            "check_circle",
-            "Sucesso",
-            response.data.message
-          );
+          return this.$refs.alert.mostrarAlerta("success", "check_circle", "Sucesso", response.data.message);
         })
         .catch((error) => {
           this.loadingProducao = !this.loadingProducao;
           console.error("Erro ao registrar produção: ", error);
-          return this.$refs.alert.mostrarAlerta(
-            "warning",
-            "error",
-            "Erro",
-            error.response.data.message
-          );
+          return this.$refs.alert.mostrarAlerta("warning", "error", "Erro", error.response.data.message);
         });
     },
 
@@ -592,6 +670,7 @@ export default {
           tipo: "despesa",
           categoria_id: this.categoriaFinancerioSelecionada.id,
           descricao: this.categoriaFinancerioSelecionada.descricao,
+          categoria: this.categoriaFinancerioSelecionada.categoria,
           valor: this.valorFinanceiro,
           metodo_pagamento: "PIX",
           data: currentDate,
@@ -599,23 +678,27 @@ export default {
         };
       }
 
+      if (this.categoriaFinancerioSelecionada.categoria === "Salários") {
+        data["employeeId"] = this.selectedEmployee.id;
+      }
+      if (this.categoriaFinancerioSelecionada.categoria === "Manutenção") {
+        data["maintenanceService"] = this.selectedService;
+      }
+
       this.loadingFinance = !this.loadingFinance;
       axios
-        .post(`${ip}/financeiro/post-financeiro`, data, {withCredentials: true})
+        .post(`${ip}/financeiro/post-financeiro`, data, { withCredentials: true })
         .then((response) => {
           this.categoriaFinancerioSelecionada = null;
           this.valorFinanceiro = null;
           this.materialPrimaSelecionada = null;
           this.quantidadeKgMateriaPrima = null;
           this.fornecedor = null;
+          this.selectedEmployee = null;
+          this.selectedService = null;
 
           this.loadingFinance = !this.loadingFinance;
-          return this.$refs.alert.mostrarAlerta(
-            "success",
-            "check_circle",
-            "Sucesso",
-            response.data.message
-          );
+          return this.$refs.alert.mostrarAlerta("success", "check_circle", "Sucesso", response.data.message);
         })
         .catch((error) => {
           this.loadingFinance = !this.loadingFinance;
@@ -646,11 +729,13 @@ export default {
         cliente: this.pedido.cliente,
         username: this.decodeJwt().username,
         valor: this.pedido.valor,
+        // Verificando se o pedido é de uma sacola, para adicionar o tamanho
+        tamanho: this.pedido.produto === 3 ? this.pedido.tamanho : null,
       };
 
       this.loadingPedido = !this.loadingPedido;
       axios
-        .post(`${ip}/pedido/post-pedido`, data, {withCredentials: true})
+        .post(`${ip}/pedido/post-pedido`, data, { withCredentials: true })
         .then((response) => {
           this.pedido.produto = "";
           this.pedido.quantidade = null;
@@ -659,28 +744,18 @@ export default {
           this.pedido.valor = null;
 
           this.loadingPedido = !this.loadingPedido;
-          return this.$refs.alert.mostrarAlerta(
-            "success",
-            "check_circle",
-            "Sucesso",
-            response.data.message
-          );
+          return this.$refs.alert.mostrarAlerta("success", "check_circle", "Sucesso", response.data.message);
         })
         .catch((error) => {
           this.loadingPedido = !this.loadingPedido;
           console.error("Erro ao registrar pedido: ", error);
-          return this.$refs.alert.mostrarAlerta(
-            "warning",
-            "error",
-            "Erro",
-            error.response.data.message
-          );
+          return this.$refs.alert.mostrarAlerta("warning", "error", "Erro", error.response.data.message);
         });
     },
 
     fetchClients() {
       axios
-        .get(`${ip}/pedido/get-clients`, {withCredentials: true})
+        .get(`${ip}/pedido/get-clients`, { withCredentials: true })
         .then((response) => {
           response.data.forEach((cliente) => {
             this.clientes.push(cliente.cliente);
@@ -693,7 +768,7 @@ export default {
 
     fetchFornecedores() {
       axios
-        .get(`${ip}/estoque/get-fornecedores`, {withCredentials: true})
+        .get(`${ip}/estoque/get-fornecedores`, { withCredentials: true })
         .then((response) => {
           response.data.forEach((fornecedor) => {
             this.fornecedores.push(fornecedor.fornecedor);
@@ -701,6 +776,19 @@ export default {
         })
         .catch((error) => {
           console.error("Erro ao consultar fornecedores: ", error);
+        });
+    },
+
+    fetchMaintenanceServices() {
+      axios
+        .get(`${ip}/financeiro/fetch-maintenance-services`)
+        .then((response) => {
+          response.data.forEach((service) => {
+            if (service.servico_manutencao) this.maintenanceServices.push(service.servico_manutencao);
+          });
+        })
+        .catch((error) => {
+          console.error("Erro ao buscar serviços de manutenção: ", error);
         });
     },
   },
@@ -737,6 +825,44 @@ export default {
   margin: 20px 0;
   font-weight: bold;
   position: relative;
+}
+
+/* Legenda Tamanho Sacola */
+.legend {
+  border-radius: 10px;
+  padding: 10px;
+  width: 300px;
+  margin-bottom: 20px;
+}
+.legend-title {
+  color: #42b983;
+  font-size: 18px;
+  font-weight: bold;
+  margin-bottom: 10px;
+}
+.legend-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 8px 0;
+  padding: 8px 12px;
+  border-radius: 5px;
+  /* background: linear-gradient(90deg, #fff8e1 0%, #fff3c0 100%); */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.legend-item span {
+  font-weight: bold;
+  color: #ffc107;
+}
+
+.legend-item:hover {
+  transform: scale(1.02);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 @media screen and (max-width: 768px) {

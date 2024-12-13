@@ -6,14 +6,14 @@ const router = Router();
 
 router.post("/post-pedido", checkToken, async (req, res, next) => {
   try {
-    let { material_id, quantidade, unidade, saida, data, username, cliente, valor } = req.body;
+    let { material_id, quantidade, unidade, saida, data, username, cliente, valor, tamanho } = req.body;
 
     // Verificar disponibilidade de material
     const checkEstque = await pool.query(
       `
 			SELECT
-				SUM(case when entrada then quantidade else 0 end) - 
-				SUM(case when saida then quantidade else 0 end) AS "quantidade" 
+				SUM(case when entrada then quantidade else 0 end) -
+				SUM(case when saida then quantidade else 0 end) AS "quantidade"
 			FROM reciplast.estoque
 			WHERE material_id = $1
 		`,
@@ -24,20 +24,25 @@ router.post("/post-pedido", checkToken, async (req, res, next) => {
       return res.status(400).json({ message: "Quantidade insuficiente em estoque." });
     }
 
+    let params_pedido = [cliente, username, data];
+    // Verificando se Pedido é de Sacola
+    if (material_id === 3) {
+      params_pedido.push(tamanho);
+    }
     const postPedido = await pool.query(
       `
-			INSERT INTO reciplast.pedidos 
-			(cliente, user_create, data, created_at, updated_at)
-			VALUES ($1, $2, $3, NOW() AT TIME ZONE 'America/Sao_Paulo', NOW() AT TIME ZONE 'America/Sao_Paulo')
+			INSERT INTO reciplast.pedidos
+			(cliente, user_create, data, ${material_id === 3 ? "tamanho_sacola, " : ""} created_at, updated_at )
+			VALUES ($1, $2, $3 ${
+        material_id === 3 ? ", $4" : ""
+      } , NOW() AT TIME ZONE 'America/Sao_Paulo', NOW() AT TIME ZONE 'America/Sao_Paulo')
 			RETURNING id
 			`,
-      [cliente, username, data]
+      params_pedido
     );
 
     if (postPedido.rows.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Erro ao criar pedido. Verifique as informações e tente novamente." });
+      return res.status(400).json({ message: "Erro ao criar pedido. Verifique as informações e tente novamente." });
     }
 
     const updateEstoque = await pool.query(
@@ -61,17 +66,13 @@ router.post("/post-pedido", checkToken, async (req, res, next) => {
     );
 
     if (updateEstoque.rows.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Erro ao criar pedido. Verifique as informações e tente novamente." });
+      return res.status(400).json({ message: "Erro ao criar pedido. Verifique as informações e tente novamente." });
     }
 
     const updateFinanceiro = await pool.query(
       `
 			INSERT INTO reciplast.financeiro (descricao, valor, data, user_create, metodo_pagamento, tipo, categoria_id)
-			VALUES ('Venda de ${quantidade}Kg de ${
-        material_id === 4 ? "Grão de Plástico Reciplast" : "Sacola de Plástico"
-      }',
+			VALUES ('Venda de ${quantidade}Kg de ${material_id === 4 ? "Grão de Plástico Reciplast" : "Sacola de Plástico"}',
 			$1, $2, $3, 'PIX', 'receita', 1)
 			RETURNING *
 		`,
@@ -79,9 +80,7 @@ router.post("/post-pedido", checkToken, async (req, res, next) => {
     );
 
     if (updateFinanceiro.rows.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Erro ao criar pedido. Verifique as informações e tente novamente." });
+      return res.status(400).json({ message: "Erro ao criar pedido. Verifique as informações e tente novamente." });
     }
 
     res.status(201).json({ message: "Pedido concluído com sucesso.", pedido: postPedido.rows[0] });
@@ -93,12 +92,25 @@ router.post("/post-pedido", checkToken, async (req, res, next) => {
 router.get("/get-clients", checkToken, async (req, res, next) => {
   try {
     const clients = await pool.query(
-      `SELECT cliente 
+      `SELECT cliente
 			FROM reciplast.pedidos
 			GROUP BY cliente`
     );
 
     res.status(200).json(clients.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/fetch-employee", async (req, res, next) => {
+  try {
+    const employees = await pool.query(`
+      Select id, nome
+      FROM reciplast.funcionarios
+    `);
+
+    return res.status(200).json(employees.rows);
   } catch (error) {
     next(error);
   }
