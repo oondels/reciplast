@@ -76,6 +76,7 @@ router.get("/estoqueIndividual-chart-data", checkToken, async (req, res, next) =
 				reciplast.produtos p
 			LEFT JOIN
 				reciplast.estoque e ON p.id = e.material_id
+      WHERE p.nome != 'Prestação de Serviços'
 			GROUP BY
 				p.nome, p.tag, p.type, p.id
 		`;
@@ -89,7 +90,7 @@ router.get("/estoqueIndividual-chart-data", checkToken, async (req, res, next) =
 });
 
 // Histórico de entradas e saídas de material
-router.get("/stock-history/:materialId", checkToken,  async (req, res, next) => {
+router.get("/stock-history/:materialId", checkToken, async (req, res, next) => {
   try {
     const materialId = req.params.materialId;
 

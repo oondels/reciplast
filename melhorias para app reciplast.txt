@@ -22,9 +22,12 @@ Registro financeiro especificar por funcionário - (José Marcos, Gilmar Barbosa
 Feito
 especificar qual serviço realizado no registro de gasto de manutenção, especificar qual maquina foi feita - (extrusora de balão, extrusora recuperadora, corte e solda, picotador, prensa, aglutinador)
 
+Feito
+- Nos pedidos adicionar opção de prestação de serviços para outras empresa, pegar as aparas (sobra de material) que sobram de outra empresa para fazer grão e devolver, cobrando a mão de obra
+
+Verificar exatamente qual parte ele quer isso
 nos realatorios personalizados, mostrar valores
 
+Feito
 - Colocar registro para acompanhamento de manutenção, ter historico e acompanhar as trocas
 Baixar os detalhes através do "Detalhamento de indicadores"
-
-- Nos pedidos adicionar opção de prestação de serviços para outras empresa, pegar as aparas (sobra de material) que sobram de outra empresa para fazer grão e devolver, cobrando a mão de obra

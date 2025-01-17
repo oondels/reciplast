@@ -13,8 +13,7 @@
             <div class="card-header">Baixar Indicadores</div>
             <div class="card-body">
               <p class="card-text">
-                Faça download dos indicadores de produção, estoque e financeiro para análise
-                detalhada.
+                Faça download dos indicadores de produção, estoque e financeiro para análise detalhada.
               </p>
 
               <div class="container">
@@ -25,15 +24,11 @@
                       clearable
                       label="Categoria"
                       v-model="reportCategory"
-                      :items="['Financeiro', 'Produção', 'Estoque']"
+                      :items="['Financeiro', 'Produção', 'Estoque', 'Manutencao']"
                     />
                   </div>
                   <div class="col-12 col-md-4">
-                    <v-text-field
-                      v-model="reportData.dataInicial"
-                      label="Data Inicial"
-                      type="date"
-                    />
+                    <v-text-field v-model="reportData.dataInicial" label="Data Inicial" type="date" />
                   </div>
                   <div class="col-12 col-md-4">
                     <v-text-field v-model="reportData.dataFinal" label="Data Final" type="date" />
@@ -42,7 +37,10 @@
 
                 <!-- Detalhes -->
                 <div class="row" v-if="reportCategory">
-                  <div class="col-12 col-md-6">
+                  <div
+                    v-if="reportDetails[reportCategory] && reportDetails[reportCategory].items"
+                    class="col-12 col-md-6"
+                  >
                     <v-combobox
                       clearable
                       label="Detalhes"
@@ -51,7 +49,10 @@
                       :disabled="reportCategory === 'Financeiro' && !!reportData.detalhe"
                     />
                   </div>
-                  <div class="col-12 col-md-6">
+                  <div
+                    v-if="reportDetails[reportCategory] && reportDetails[reportCategory].details"
+                    class="col-12 col-md-6"
+                  >
                     <v-combobox
                       clearable
                       label="Detalhes"
@@ -65,11 +66,7 @@
                 <!-- More Details -->
                 <div
                   class="row"
-                  v-if="
-                    reportDetails[reportCategory] &&
-                    reportDetails[reportCategory].moreDetails &&
-                    reportCategory
-                  "
+                  v-if="reportDetails[reportCategory] && reportDetails[reportCategory].moreDetails && reportCategory"
                 >
                   <div class="col-12">
                     <v-combobox
@@ -117,9 +114,7 @@
             <div class="details">
               <h3>Produção de {{ producao.nome }}</h3>
 
-              <p class="quantity">
-                {{ producao.fardos }} <span class="label">Fardos Produzidos</span>
-              </p>
+              <p class="quantity">{{ producao.fardos }} <span class="label">Fardos Produzidos</span></p>
 
               <p class="sub-info">Meta: 80 fardos</p>
             </div>
@@ -144,9 +139,7 @@
                   stockHistory(material.id);
                 "
               >
-                <div
-                  class="min-chart-title d-flex flex-row justify-content-between align-items-center"
-                >
+                <div class="min-chart-title d-flex flex-row justify-content-between align-items-center">
                   <i :class="materialIcon[material.nome]"></i>
                   <h5 class="text-center">{{ material.nome }}</h5>
                 </div>
@@ -213,11 +206,7 @@
                   <h4>Receita X Despesa R$</h4>
                 </span>
 
-                <div
-                  v-if="
-                    generalExpensesData && generalExpensesData.options && generalExpensesData.series
-                  "
-                >
+                <div v-if="generalExpensesData && generalExpensesData.options && generalExpensesData.series">
                   <ApexCharts
                     max-width="400"
                     :options="generalExpensesData.options"
@@ -233,9 +222,7 @@
                 <v-card-text>
                   <div
                     v-if="
-                      detailedExpensesData &&
-                      detailedExpensesData.optionsReceita &&
-                      detailedExpensesData.seriesReceita
+                      detailedExpensesData && detailedExpensesData.optionsReceita && detailedExpensesData.seriesReceita
                     "
                   >
                     <h4 class="text-center">Detalhamento de Despesas</h4>
@@ -249,12 +236,7 @@
 
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn
-                    text="Fechar"
-                    color="danger"
-                    variant="outlined"
-                    @click="isActive.value = false"
-                  ></v-btn>
+                  <v-btn text="Fechar" color="danger" variant="outlined" @click="isActive.value = false"></v-btn>
                 </v-card-actions>
               </v-card>
             </template>
@@ -270,9 +252,7 @@
               v-bind="activatorProps"
               role="button"
               @click="detailedSellHistory"
-              v-if="
-                expensesHistoryData && expensesHistoryData.options && expensesHistoryData.series
-              "
+              v-if="expensesHistoryData && expensesHistoryData.options && expensesHistoryData.series"
               class="chart-item chart-item-details d-flex flex-column justify-content-center align-items-center"
             >
               <span class="d-flex flex-row justify-content-between align-items-center">
@@ -300,11 +280,7 @@
               </v-card-title>
               <v-card-text>
                 <div
-                  v-if="
-                    detailedSellHistoryData &&
-                    detailedSellHistoryData.options &&
-                    detailedSellHistoryData.series
-                  "
+                  v-if="detailedSellHistoryData && detailedSellHistoryData.options && detailedSellHistoryData.series"
                 >
                   <ApexCharts
                     type="bar"
@@ -317,12 +293,7 @@
               <v-card-actions>
                 <v-spacer></v-spacer>
 
-                <v-btn
-                  text="Fechar"
-                  variant="outlined"
-                  color="danger"
-                  @click="isActive.value = false"
-                ></v-btn>
+                <v-btn text="Fechar" variant="outlined" color="danger" @click="isActive.value = false"></v-btn>
               </v-card-actions>
             </v-card>
           </template>
@@ -337,16 +308,8 @@
             <h4>Fabricação de Sacolas e Grão (Kg)</h4>
           </span>
 
-          <div
-            v-if="
-              productionHistoryData && productionHistoryData.options && productionHistoryData.series
-            "
-          >
-            <ApexChart
-              type="bar"
-              :options="productionHistoryData.options"
-              :series="productionHistoryData.series"
-            />
+          <div v-if="productionHistoryData && productionHistoryData.options && productionHistoryData.series">
+            <ApexChart type="bar" :options="productionHistoryData.options" :series="productionHistoryData.series" />
           </div>
         </div>
 
@@ -422,7 +385,6 @@ export default {
       },
 
       reportDetails: {
-        // Feito
         Financeiro: {
           items: [
             "Todos",
@@ -436,7 +398,6 @@ export default {
           details: ["Receita", "Despesa"],
           moreDetails: ["Metodo Pagamento"],
         },
-        // Feito
         Produção: {
           items: ["Todos", "Sacolas", "Grãos"],
           details: ["Produção", "Venda"],
@@ -446,6 +407,11 @@ export default {
           items: ["Todos", "Plástico", "Sacola de Plástico", "Grãos"],
           details: ["Entrada", "Saida"],
           moreDetails: ["Fornecedor"],
+        },
+        Manutencao: {
+          items: null,
+          details: null,
+          moreDetails: null,
         },
       },
       reportCategory: "",
@@ -497,8 +463,7 @@ export default {
         .get(`${ip}/chart/producao-mensal`, { withCredentials: true })
         .then((response) => {
           this.producaoMensal = response.data;
-					console.log(this.producaoMensal);
-
+          console.log(this.producaoMensal);
         })
         .catch((error) => {
           console.error("Erro ao buscar dados de produção mensal: ", error);
@@ -599,7 +564,10 @@ export default {
         Financeiro: `${ip}/report/financeiro/`,
         Produção: `${ip}/report/producao/`,
         Estoque: `${ip}/report/estoque/`,
+        Manutencao: `${ip}/report/manutencao/`,
       };
+
+      console.log(this.reportData);
 
       this.loadingReport = !this.loadingReport;
       axios
@@ -708,6 +676,18 @@ export default {
             item.quantidade,
             item.fardos ? item.fardos : "",
             item.cliente ? item.cliente : "",
+          ]);
+        });
+      } else if (this.reportCategory === "Manutencao") {
+        workSheetData.push(["Data", "Categoria", "Descrição", "Serviço", "Valor (R$)"]);
+
+        data.forEach((item) => {
+          workSheetData.push([
+            formatDateTime(item.data),
+            item.categoria,
+            item.descricao,
+            item.servico_manutencao,
+            item.valor,
           ]);
         });
       }

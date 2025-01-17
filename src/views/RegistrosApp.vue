@@ -6,7 +6,7 @@
         :infoDescription="'Registro da produção de fardos do produto selecionado (Sacola de Plástico ou Grãos). O registro atualiza automaticamente o estoque do produto final e dos materiais utilizados no processo de fabricação.'"
       />
 
-      <div class="register" v-for="produto in filterProdutos()" :key="produto.id">
+      <div class="register" v-for="produto in produtosProducao()" :key="produto.id">
         <p class="p-2 alert alert-primary rounded">Produção de {{ produto.nome }}</p>
 
         <div class="actions">
@@ -82,6 +82,7 @@
                   variant="outlined"
                   clearable
                   required
+                  :rules="rules"
                 ></v-select>
               </v-col>
 
@@ -96,6 +97,7 @@
                   variant="outlined"
                   clearable
                   required
+                  :rules="rules"
                 ></v-select>
               </v-col>
             </v-row>
@@ -116,6 +118,7 @@
 
             <!-- Campo de Quantidade -->
             <div class="col-12 d-flex flex-row flex-wrap">
+              <!-- Sacola de Plástico -->
               <v-select
                 v-if="pedido.produto && pedido.produto === 3"
                 class="col-12 col-md-6 mb-2"
@@ -123,8 +126,11 @@
                 variant="outlined"
                 label="Fardo (Kg)"
                 :items="fardoGrao"
+                required
+                :rules="rules"
               ></v-select>
 
+              <!-- Grão de Plástico Reciplast -->
               <v-select
                 v-if="pedido.produto && pedido.produto === 4"
                 class="col-12 col-md-6 mb-2"
@@ -132,7 +138,20 @@
                 variant="outlined"
                 label="Fardo (Kg)"
                 :items="fardoSacola"
+                required
+                :rules="rules"
               ></v-select>
+
+              <!-- Prestação de Serviços -->
+              <v-text-field
+                v-if="pedido.produto && pedido.produto === 5"
+                class="col-12 col-md-6 mb-2"
+                v-model="pedido.quantidade"
+                variant="outlined"
+                label="Quantidade (Kg)"
+                required
+                :rules="rules"
+              ></v-text-field>
 
               <v-text-field
                 v-if="pedido.produto"
@@ -142,7 +161,22 @@
                 type="number"
                 variant="outlined"
                 required
+                :rules="rules"
               ></v-text-field>
+            </div>
+
+            <!-- Método de Pagamento -->
+            <div class="col-12">
+              <v-combobox
+                v-if="pedido.produto"
+                v-model="pedido.metodo_pagamento"
+                label="Método de Pagamento"
+                :items="['PIX', 'Cartão de débito', 'Cartão de crédito', 'Transferência bancária', 'Boleto']"
+                variant="outlined"
+                color="success"
+                required
+                :rules="rules"
+              />
             </div>
 
             <!-- Seleção de Cliente -->
@@ -156,6 +190,7 @@
                   clearable
                   variant="outlined"
                   required
+                  :rules="rules"
                 ></v-combobox>
 
                 <!-- Cliente Novo -->
@@ -167,6 +202,7 @@
                   clearable
                   variant="outlined"
                   required
+                  :rules="rules"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -179,6 +215,8 @@
                   label="Data do Pedido"
                   type="date"
                   variant="outlined"
+                  required
+                  :rules="rules"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -226,6 +264,8 @@
             clearable
             label="Selecione uma Opção"
             variant="outlined"
+            required
+            :rules="rules"
           />
 
           <v-combobox
@@ -238,6 +278,8 @@
             clearable
             color="success"
             class="col-md-6 mb-2"
+            required
+            :rules="rules"
           />
 
           <v-combobox
@@ -253,6 +295,8 @@
             variant="solo"
             color="success"
             class="col-md-6 mb-2"
+            required
+            :rules="rules"
           />
 
           <v-text-field
@@ -267,6 +311,8 @@
             variant="solo-filled"
             color="success"
             class="col-md-6 mb-2"
+            required
+            :rules="rules"
           />
 
           <v-checkbox
@@ -293,6 +339,8 @@
                 : 'Valor'
             "
             variant="outlined"
+            required
+            :rules="rules"
           />
         </div>
 
@@ -311,6 +359,8 @@
             item-value="id"
             item-title="nome"
             variant="outlined"
+            required
+            :rules="rules"
           />
 
           <v-text-field v-model="quantidadeKgMateriaPrima" variant="outlined" class="mr-2" label="Quantidade (KG)" />
@@ -322,11 +372,20 @@
             clearable
             variant="outlined"
             label="Fornecedores Antigos"
+            required
+            :rules="rules"
           />
 
           <!-- Fornecedor Novo -->
           <v-checkbox v-model="newFornecedor" label="Novo Fornecedor?"></v-checkbox>
-          <v-text-field v-if="newFornecedor" v-model="fornecedor" variant="outlined" label="Novo Fornecedor" />
+          <v-text-field
+            v-if="newFornecedor"
+            v-model="fornecedor"
+            variant="outlined"
+            label="Novo Fornecedor"
+            required
+            :rules="rules"
+          />
         </div>
 
         <p v-if="categoriaFinancerioSelecionada" class="descricao-financeiro">
@@ -450,6 +509,12 @@ export default {
       quantidadeKgMateriaPrima: null,
       fornecedor: null,
 
+      rules: [
+        (v) => {
+          if (!v) return "Campo obrigatório";
+        },
+      ],
+
       clientes: [],
       newClient: false,
       fornecedores: [],
@@ -457,9 +522,10 @@ export default {
 
       loadingPedido: false,
       pedido: {
-        produto: "",
+        produto: null,
         quantidade: null,
-        cliente: "",
+        metodo_pagamento: null,
+        cliente: null,
         data: "",
         valor: null,
         tamanho: null,
@@ -546,6 +612,7 @@ export default {
             this.produtoEstoque[produto.nome] = produto.quantidade;
             this.produtosNome.push(produto.nome);
           });
+          console.log(this.produtosNome);
         })
         .catch((error) => {
           console.error("Erro ao consultar produtos: ", error);
@@ -553,6 +620,10 @@ export default {
     },
 
     filterProdutos() {
+      return this.produtos.filter((produto) => produto.type === "produto-final" || produto.type === "servico");
+    },
+
+    produtosProducao() {
       return this.produtos.filter((produto) => produto.type === "produto-final");
     },
 
@@ -717,6 +788,17 @@ export default {
         );
       }
 
+      if (
+        !this.pedido.produto ||
+        !this.pedido.quantidade ||
+        !this.pedido.data ||
+        !this.pedido.cliente ||
+        !this.pedido.metodo_pagamento ||
+        !this.pedido.valor
+      ) {
+        return this.$refs.alert.mostrarAlerta("warning", "warning", "Erro", "Todos os campos são obrigatórios.");
+      }
+
       const currentDate = new Date();
       currentDate.setHours(currentDate.getHours() - 3);
 
@@ -728,6 +810,7 @@ export default {
         data: this.pedido.data,
         cliente: this.pedido.cliente,
         username: this.decodeJwt().username,
+        metodo_pagamento: this.pedido.metodo_pagamento,
         valor: this.pedido.valor,
         // Verificando se o pedido é de uma sacola, para adicionar o tamanho
         tamanho: this.pedido.produto === 3 ? this.pedido.tamanho : null,

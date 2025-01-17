@@ -93,23 +93,23 @@ router.get("/producao", checkToken, async (req, res, next) => {
 				p.nome,
 				e.quantidade
 				${producao ? ", " + producao : ""}
-				${dataInicial || !moreDetails === 'Fardo'? ", e.data" : ""}
+				${dataInicial || !moreDetails === "Fardo" ? ", e.data" : ""}
 			`;
 
-			if (moreDetails === 'Cliente') {
-				query += `, rp.cliente `
-			} else if (moreDetails === 'Fardo') {
-				query += `, COUNT(e.id) as fardos `
-			}
+    if (moreDetails === "Cliente") {
+      query += `, rp.cliente `;
+    } else if (moreDetails === "Fardo") {
+      query += `, COUNT(e.id) as fardos `;
+    }
 
-			query += `FROM
+    query += `FROM
 			reciplast.produtos p
 			LEFT JOIN reciplast.estoque e ON p.id = e.material_id
-			`
+			`;
 
-			if (moreDetails === 'Cliente') {
-				query += `INNER JOIN reciplast.pedidos rp ON e.pedido_id = rp.id`
-			}
+    if (moreDetails === "Cliente") {
+      query += `INNER JOIN reciplast.pedidos rp ON e.pedido_id = rp.id`;
+    }
 
     // Condições opcionais
     if (categoria) {
@@ -121,15 +121,13 @@ router.get("/producao", checkToken, async (req, res, next) => {
       }
     }
 
-		if (detalhe && producao) {
-			if (detalhe === 'Produção') {
-				addCondition(`e.entrada = $${params.length + 1} AND fornecedor = 'Produção Interna'`, true);
-			}
-			else if (detalhe === 'Venda') {
-				addCondition(`e.saida = $${params.length + 1}`, true);
-			}
-			
-		}
+    if (detalhe && producao) {
+      if (detalhe === "Produção") {
+        addCondition(`e.entrada = $${params.length + 1} AND fornecedor = 'Produção Interna'`, true);
+      } else if (detalhe === "Venda") {
+        addCondition(`e.saida = $${params.length + 1}`, true);
+      }
+    }
 
     if (dataInicial && dataFinal) {
       addCondition(`e.data BETWEEN $${params.length + 1}`, dataInicial);
@@ -144,10 +142,10 @@ router.get("/producao", checkToken, async (req, res, next) => {
     query += ` GROUP BY
 				p.nome,
 				e.quantidade
-				${moreDetails === 'Cliente' ? ", rp.cliente" : ""}
-				${moreDetails === 'Fardo' ? ", e.quantidade" : ""}
-				${producao ? ", "+producao : ""}
-				${dataInicial && dataFinal || !moreDetails === 'Fardo' ? ", e.data ORDER BY e.data ASC" : ""}`;
+				${moreDetails === "Cliente" ? ", rp.cliente" : ""}
+				${moreDetails === "Fardo" ? ", e.quantidade" : ""}
+				${producao ? ", " + producao : ""}
+				${(dataInicial && dataFinal) || !moreDetails === "Fardo" ? ", e.data ORDER BY e.data ASC" : ""}`;
 
     const result = await pool.query(query, params);
 
@@ -158,58 +156,87 @@ router.get("/producao", checkToken, async (req, res, next) => {
 });
 
 router.get("/estoque", checkToken, async (req, res, next) => {
-	try {
-		const { dataInicial, dataFinal, categoria, moreDetails, detalhe } = req.query;
+  try {
+    const { dataInicial, dataFinal, categoria, moreDetails, detalhe } = req.query;
     // categoria -> Plástico, sacola, grão
     // moreDetails -> Fornecedor
     // detalhe -> Entrada ou Saida
-		let params = [];
-		let query = `
-		SELECT 
-			p.nome, 
-			SUM(e.quantidade) as quantidade, 
+    let params = [];
+    let query = `
+		SELECT
+			p.nome,
+			SUM(e.quantidade) as quantidade,
 			e.data
 			${moreDetails ? ", e.fornecedor" : ""}
 		FROM reciplast.produtos p
 		LEFT JOIN reciplast.estoque e ON p.id = e.material_id
 		WHERE
 			e.data BETWEEN $1 AND $2`;
-		params.push(dataInicial);
-		params.push(dataFinal);
- 
-		if (categoria) {
-			if (categoria === "Plástico") {
-				query += ` AND e.material_id = 2`;
-			}
-			if (categoria === "Sacola de Plástico") {
-				query += ` AND e.material_id = 3`;
-			}
-			if (categoria === "Grãos") {
-				query += ` AND e.material_id = 4`;
-			}
-		}
+    params.push(dataInicial);
+    params.push(dataFinal);
 
-		if (detalhe) {
-			if (detalhe === "Entrada") {
-				query += ` AND e.entrada = true`;
-			}
-			if (detalhe === "Saida") {
-				query += ` AND e.saida = true`;
-			}
-		}
+    if (categoria) {
+      if (categoria === "Plástico") {
+        query += ` AND e.material_id = 2`;
+      }
+      if (categoria === "Sacola de Plástico") {
+        query += ` AND e.material_id = 3`;
+      }
+      if (categoria === "Grãos") {
+        query += ` AND e.material_id = 4`;
+      }
+    }
 
-		query += `
-		GROUP BY 
+    if (detalhe) {
+      if (detalhe === "Entrada") {
+        query += ` AND e.entrada = true`;
+      }
+      if (detalhe === "Saida") {
+        query += ` AND e.saida = true`;
+      }
+    }
+
+    query += `
+		GROUP BY
 			p.nome, e.data
 			${moreDetails ? ", e.fornecedor" : ""}
 		ORDER BY e.data ASC
-		`
-		const result = await pool.query(query, params)
-		
-		return res.status(200).json(result.rows);
-	} catch (error) {
-		next(error);
-	}
-})
+		`;
+    const result = await pool.query(query, params);
+
+    return res.status(200).json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/manutencao", checkToken, async (req, res, next) => {
+  try {
+    const { dataInicial, dataFinal } = req.query;
+
+    const query = await pool.query(
+      `
+			SELECT
+				fc.categoria, f.descricao, f.valor, f.servico_manutencao, f.data
+			FROM
+				reciplast.financeiro_categoria fc
+			INNER JOIN
+				reciplast.financeiro f ON fc.id = f.categoria_id
+			WHERE
+				f.data BETWEEN $1 AND $2 AND
+				fc.id = 5
+			GROUP BY
+				fc.categoria, f.descricao, f.valor, f.servico_manutencao, f.data
+			ORDER BY
+				f.data ASC
+		`,
+      [dataInicial, dataFinal]
+    );
+
+    return res.status(200).json(query.rows);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

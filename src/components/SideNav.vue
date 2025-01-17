@@ -1,21 +1,14 @@
 <template>
   <aside class="side-nav m-2" :class="showSideNav ? 'show' : ''">
     <router-link to="/">
-      <img class="mw-100" src="logo.png" alt="logo reciplast" />
+      <!-- <img class="mw-100" src="logo.png" alt="logo reciplast" /> -->
     </router-link>
 
     <div class="w-auto">
       <ul class="navbar-nav">
-        <router-link class="nav-button" to="/" active-class="active">
-          <i class="mdi mdi-home"></i>Início
-        </router-link>
+        <router-link class="nav-button" to="/" active-class="active"> <i class="mdi mdi-home"></i>Início </router-link>
 
-        <router-link
-          v-if="decodeJwt() && decodeJwt().admin"
-          class="nav-button"
-          to="/dashboard"
-          active-class="active"
-        >
+        <router-link v-if="decodeJwt() && decodeJwt().admin" class="nav-button" to="/dashboard" active-class="active">
           <i class="mdi mdi-view-dashboard"></i>Gerenciamento
         </router-link>
 
