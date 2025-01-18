@@ -5,7 +5,7 @@ import checkToken from "../utils/checkToken.js";
 const router = Router();
 
 // Report financeiro
-router.get("/financeiro", checkToken, async (req, res, next) => {
+router.get("/financeiro", async (req, res, next) => {
   try {
     const { dataInicial, dataFinal, categoria, moreDetails, detalhe } = req.query;
     // categoria -> Tipo de financeiro (Vendas, salarios, etc)
@@ -65,7 +65,7 @@ router.get("/financeiro", checkToken, async (req, res, next) => {
   }
 });
 
-router.get("/producao", checkToken, async (req, res, next) => {
+router.get("/producao", async (req, res, next) => {
   try {
     const { dataInicial, dataFinal, categoria, moreDetails, detalhe } = req.query;
     // categoria -> Tipo de produção (Sacola, Grão)
@@ -155,7 +155,7 @@ router.get("/producao", checkToken, async (req, res, next) => {
   }
 });
 
-router.get("/estoque", checkToken, async (req, res, next) => {
+router.get("/estoque", async (req, res, next) => {
   try {
     const { dataInicial, dataFinal, categoria, moreDetails, detalhe } = req.query;
     // categoria -> Plástico, sacola, grão
@@ -210,7 +210,7 @@ router.get("/estoque", checkToken, async (req, res, next) => {
   }
 });
 
-router.get("/manutencao", checkToken, async (req, res, next) => {
+router.get("/manutencao", async (req, res, next) => {
   try {
     const { dataInicial, dataFinal } = req.query;
 

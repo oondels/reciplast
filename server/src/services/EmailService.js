@@ -14,14 +14,15 @@ const transporter = nodeMailer.createTransport({
   },
 });
 
-router.post("/send-help-email", checkToken, async (req, res, next) => {
+router.post("/send-help-email", async (req, res, next) => {
   try {
     const { problem, description } = req.body;
 
-    await transporter.sendMail({
-      to: "hendriusfelix.dev@gmail.com",
-      subject: `⚠️Ajuda Reciplast⚠️ - ${problem}`,
-      html: `
+    await transporter
+      .sendMail({
+        to: "hendriusfelix.dev@gmail.com",
+        subject: `⚠️Ajuda Reciplast⚠️ - ${problem}`,
+        html: `
   <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);">
       <div style="text-align: center; margin-bottom: 20px;">
         <h1 style="color: #d9534f; font-size: 24px; margin: 0;">⚠️ Ajuda Reciplast ⚠️</h1>
@@ -39,18 +40,18 @@ router.post("/send-help-email", checkToken, async (req, res, next) => {
       </div>
   </div>
 `,
-    })
-		.then(() => {
-			console.log("Email sent");
-			return res.status(200).json({ message: "Email enviado com sucesso. Responderei assim que possível." });
-		})
-		.catch(error => {
-			console.error("Erro ao enviar email: ", error);
-			return res.status(500).json({ message: "Erro ao enviar email. Por favor, tente novamente" });
-		})
+      })
+      .then(() => {
+        console.log("Email sent");
+        return res.status(200).json({ message: "Email enviado com sucesso. Responderei assim que possível." });
+      })
+      .catch((error) => {
+        console.error("Erro ao enviar email: ", error);
+        return res.status(500).json({ message: "Erro ao enviar email. Por favor, tente novamente" });
+      });
   } catch (error) {
     // next(error);
-		console.error(error);
+    console.error(error);
   }
 });
 

@@ -4,7 +4,7 @@ import checkToken from "../utils/checkToken.js";
 
 const router = Router();
 
-router.post("/post-pedido", checkToken, async (req, res, next) => {
+router.post("/post-pedido", async (req, res, next) => {
   try {
     let { material_id, quantidade, unidade, saida, data, username, cliente, valor, tamanho, metodo_pagamento } =
       req.body;
@@ -93,7 +93,7 @@ router.post("/post-pedido", checkToken, async (req, res, next) => {
   }
 });
 
-router.get("/get-clients", checkToken, async (req, res, next) => {
+router.get("/get-clients", async (req, res, next) => {
   try {
     const clients = await pool.query(
       `SELECT cliente

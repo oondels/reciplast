@@ -20,7 +20,7 @@ const meses = {
 };
 
 // Estoque Geral dos Materiais
-router.get("/estoqueGeral-chart-data", checkToken, async (req, res, next) => {
+router.get("/estoqueGeral-chart-data", async (req, res, next) => {
   try {
     let query = `
 			SELECT
@@ -65,7 +65,7 @@ router.get("/estoqueGeral-chart-data", checkToken, async (req, res, next) => {
 });
 
 // Estoque Individual de cada material
-router.get("/estoqueIndividual-chart-data", checkToken, async (req, res, next) => {
+router.get("/estoqueIndividual-chart-data", async (req, res, next) => {
   try {
     let query = `
 			SELECT
@@ -90,7 +90,7 @@ router.get("/estoqueIndividual-chart-data", checkToken, async (req, res, next) =
 });
 
 // Histórico de entradas e saídas de material
-router.get("/stock-history/:materialId", checkToken, async (req, res, next) => {
+router.get("/stock-history/:materialId", async (req, res, next) => {
   try {
     const materialId = req.params.materialId;
 
@@ -165,7 +165,7 @@ router.get("/stock-history/:materialId", checkToken, async (req, res, next) => {
 });
 
 // Financeiro
-router.get("/general-expenses", checkToken, async (req, res, next) => {
+router.get("/general-expenses", async (req, res, next) => {
   try {
     const query = `
 			SELECT
@@ -205,7 +205,7 @@ router.get("/general-expenses", checkToken, async (req, res, next) => {
   }
 });
 
-router.get("/detailed-expenses", checkToken, async (req, res, next) => {
+router.get("/detailed-expenses", async (req, res, next) => {
   try {
     const queryDespesa = `
 			SELECT
@@ -287,7 +287,7 @@ router.get("/detailed-expenses", checkToken, async (req, res, next) => {
 });
 
 // Gráfico de Linha de Receita e Despesa Mensal
-router.get("/expenses-history", checkToken, async (req, res, next) => {
+router.get("/expenses-history", async (req, res, next) => {
   try {
     const query = await pool.query(`
 		SELECT
@@ -349,7 +349,7 @@ router.get("/expenses-history", checkToken, async (req, res, next) => {
 });
 
 // Detalhamento de vendas/produto
-router.get("/detailed-sell-history", checkToken, async (req, res, next) => {
+router.get("/detailed-sell-history", async (req, res, next) => {
   try {
     const query = await pool.query(`
 			SELECT
@@ -412,7 +412,7 @@ router.get("/detailed-sell-history", checkToken, async (req, res, next) => {
 });
 
 // Produção de Sacolas e Grãos
-router.get("/production-history", checkToken, async (req, res, next) => {
+router.get("/production-history", async (req, res, next) => {
   try {
     const query = await pool.query(`
 			SELECT
@@ -493,7 +493,7 @@ router.get("/production-history", checkToken, async (req, res, next) => {
   }
 });
 
-router.get("/producao-mensal", checkToken, async (req, res, next) => {
+router.get("/producao-mensal", async (req, res, next) => {
   try {
     const query = await pool.query(`
 			SELECT

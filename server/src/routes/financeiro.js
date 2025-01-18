@@ -4,7 +4,7 @@ import checkToken from "../utils/checkToken.js";
 
 const router = Router();
 
-router.post("/post-financeiro", checkToken, async (req, res, next) => {
+router.post("/post-financeiro", async (req, res, next) => {
   try {
     const { tipo, categoria_id, descricao, valor, data, metodo_pagamento, user_create, categoria } = req.body;
 
@@ -84,7 +84,7 @@ router.get("/fetch-maintenance-services", async (req, res, next) => {
   }
 });
 
-router.get("/get-categoria", checkToken, async (req, res, next) => {
+router.get("/get-categoria", async (req, res, next) => {
   try {
     const result = await pool.query("SELECT categoria, descricao, id FROM reciplast.financeiro_categoria");
 

@@ -14,22 +14,10 @@ import FinaneiroRoutes from "./routes/financeiro.js";
 import Pedidos from "./routes/pedidos.js";
 import Report from "./routes/report.js";
 import EmailService from "./services/EmailService.js";
-
 import checkToken from "./utils/checkToken.js";
 
 const app = express();
 const port = 2399;
-
-// Verificação da conexão com o banco de dados
-pool.connect((err, client, release) => {
-  if (err) {
-    return console.error("Erro ao conectar ao banco de dados:", err.stack);
-  }
-  console.log("Conectado ao banco de dados");
-  release();
-});
-
-const server = http.createServer(app);
 
 app.use(
   cors({
@@ -41,12 +29,22 @@ app.use(
 app.use(express.json());
 app.use(cookieParser());
 
+const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
     origin: "https://reciplast.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
   },
+});
+
+// Verificação da conexão com o banco de dados
+pool.connect((err, client, release) => {
+  if (err) {
+    return console.error("Erro ao conectar ao banco de dados:", err.stack);
+  }
+  console.log("Conectado ao banco de dados");
+  release();
 });
 
 app.use("/auth", AuthRoutes);
