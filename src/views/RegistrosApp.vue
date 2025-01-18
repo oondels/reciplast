@@ -587,7 +587,7 @@ export default {
 
     fecthFardoSacola() {
       axios
-        .get(`${ip}/estoque/fardo-produto/1`)
+        .get(`${ip}/estoque/fardo-produto/1`, { withCredentials: true })
         .then((response) => {
           if (response.data && response.data[0].producao) {
             console.log(`Fardo Sacola: ${response.data[0].producao}`);
@@ -602,7 +602,7 @@ export default {
 
     fecthFardoGrao() {
       axios
-        .get(`${ip}/estoque/fardo-produto/4`)
+        .get(`${ip}/estoque/fardo-produto/4`, { withCredentials: true })
         .then((response) => {
           if (response.data && response.data[0].producao) {
             console.log(`Fardo Grão: ${response.data[0].producao}`);
@@ -617,7 +617,7 @@ export default {
 
     fetchProdutos() {
       axios
-        .get(`${ip}/estoque/get-produtos`)
+        .get(`${ip}/estoque/get-produtos`, { withCredentials: true })
         .then((response) => {
           this.produtos = response.data;
           response.data.forEach((produto) => {
@@ -654,7 +654,7 @@ export default {
 
     fetchCategoriaFinanceiro() {
       axios
-        .get(`${ip}/financeiro/get-categoria`)
+        .get(`${ip}/financeiro/get-categoria`, { withCredentials: true })
         .then((response) => {
           response.data.forEach((categoria) => {
             if (categoria.categoria !== "Vendas") {
@@ -700,7 +700,7 @@ export default {
 
       this.loadingProducao = !this.loadingProducao;
       axios
-        .post(`${ip}/estoque/post-produto-estoque`, data)
+        .post(`${ip}/estoque/post-produto-estoque`, data, { withCredentials: true })
         .then((response) => {
           this.selectedFardoGrao = null;
           this.selectedFardoSacola = null;
@@ -769,7 +769,7 @@ export default {
 
       this.loadingFinance = !this.loadingFinance;
       axios
-        .post(`${ip}/financeiro/post-financeiro`, data)
+        .post(`${ip}/financeiro/post-financeiro`, data, { withCredentials: true })
         .then((response) => {
           this.categoriaFinancerioSelecionada = null;
           this.valorFinanceiro = null;
@@ -829,7 +829,7 @@ export default {
 
       this.loadingPedido = !this.loadingPedido;
       axios
-        .post(`${ip}/pedido/post-pedido`, data)
+        .post(`${ip}/pedido/post-pedido`, data, { withCredentials: true })
         .then((response) => {
           this.pedido.produto = "";
           this.pedido.quantidade = null;
@@ -849,7 +849,7 @@ export default {
 
     fetchClients() {
       axios
-        .get(`${ip}/pedido/get-clients`)
+        .get(`${ip}/pedido/get-clients`, { withCredentials: true })
         .then((response) => {
           response.data.forEach((cliente) => {
             this.clientes.push(cliente.cliente);
@@ -862,7 +862,7 @@ export default {
 
     fetchFornecedores() {
       axios
-        .get(`${ip}/estoque/get-fornecedores`)
+        .get(`${ip}/estoque/get-fornecedores`, { withCredentials: true })
         .then((response) => {
           response.data.forEach((fornecedor) => {
             this.fornecedores.push(fornecedor.fornecedor);
@@ -875,7 +875,7 @@ export default {
 
     fetchMaintenanceServices() {
       axios
-        .get(`${ip}/financeiro/fetch-maintenance-services`)
+        .get(`${ip}/financeiro/fetch-maintenance-services`, { withCredentials: true })
         .then((response) => {
           response.data.forEach((service) => {
             if (service.servico_manutencao) this.maintenanceServices.push(service.servico_manutencao);

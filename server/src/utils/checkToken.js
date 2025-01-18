@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 const checkToken = (req, res, next) => {
   const token = req.cookies.token;
   if (!token) {
-    return res.status(401).json({ message: "You must to log in", error: true });
+    return res.status(401).json({ message: "Você precisa estar logado para prosseguir!", error: true });
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (error, user) => {

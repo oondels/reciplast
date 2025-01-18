@@ -30,13 +30,6 @@ pool.connect((err, client, release) => {
 });
 
 const server = http.createServer(app);
-const io = new Server(server, {
-  cors: {
-    origin: "https://reciplast.vercel.app",
-    methods: ["GET", "POST", "PUT", "DELETE"],
-    credentials: true,
-  },
-});
 
 app.use(
   cors({
@@ -47,6 +40,15 @@ app.use(
 );
 app.use(express.json());
 app.use(cookieParser());
+
+const io = new Server(server, {
+  cors: {
+    origin: "https://reciplast.vercel.app",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  },
+});
+
 app.use("/auth", AuthRoutes);
 app.use("/estoque", EstoqueRoutes);
 app.use("/financeiro", FinaneiroRoutes);
