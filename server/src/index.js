@@ -26,18 +26,20 @@ const io = new Server(server, {
   },
 });
 
-app.use(cors({
-	origin: "http://localhost:8080",
-	credentials: true
-}));
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
 app.use(express.json());
 app.use(cookieParser());
 app.use("/auth", AuthRoutes);
-app.use("/estoque", EstoqueRoutes)
-app.use("/financeiro", FinaneiroRoutes)
-app.use("/chart", ChartRoutes)
-app.use("/pedido", Pedidos)
-app.use("/report", Report)
+app.use("/estoque", EstoqueRoutes);
+app.use("/financeiro", FinaneiroRoutes);
+app.use("/chart", ChartRoutes);
+app.use("/pedido", Pedidos);
+app.use("/report", Report);
 app.use("/email", EmailService);
 
 io.on("connection", (socket) => {
