@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import express from "express";
 import http from "http";
 import { Server } from "socket.io";
+import pool from "./config/db/connection.js";
 dotenv.config();
 
 import AuthRoutes from "./routes/authRoutes.js";
@@ -18,6 +19,15 @@ import checkToken from "./utils/checkToken.js";
 
 const app = express();
 const port = 2399;
+
+// Verificação da conexão com o banco de dados
+pool.connect((err, client, release) => {
+  if (err) {
+    return console.error("Erro ao conectar ao banco de dados:", err.stack);
+  }
+  console.log("Conectado ao banco de dados");
+  release();
+});
 
 const server = http.createServer(app);
 const io = new Server(server, {
