@@ -8,7 +8,6 @@ router.post("/post-pedido", checkToken, async (req, res, next) => {
   try {
     let { material_id, quantidade, unidade, saida, data, username, cliente, valor, tamanho, metodo_pagamento } =
       req.body;
-    console.log(metodo_pagamento);
 
     // Verificando de produto não é prestação de serviço
     if (material_id !== 5) {
@@ -31,15 +30,15 @@ router.post("/post-pedido", checkToken, async (req, res, next) => {
 
     let params_pedido = [cliente, username, data];
     // Verificando se Pedido é de Sacola
-    if (material_id === 3) {
+    if (material_id === 1) {
       params_pedido.push(tamanho);
     }
     const postPedido = await pool.query(
       `
     	INSERT INTO reciplast.pedidos
-    	(cliente, user_create, data, ${material_id === 3 ? "tamanho_sacola, " : ""} created_at, updated_at )
+    	(cliente, user_create, data, ${material_id === 1 ? "tamanho_sacola, " : ""} created_at, updated_at )
     	VALUES ($1, $2, $3 ${
-        material_id === 3 ? ", $4" : ""
+        material_id === 1 ? ", $4" : ""
       } , NOW() AT TIME ZONE 'America/Sao_Paulo', NOW() AT TIME ZONE 'America/Sao_Paulo')
     	RETURNING id
     	`,
@@ -78,7 +77,7 @@ router.post("/post-pedido", checkToken, async (req, res, next) => {
       `
     	INSERT INTO reciplast.financeiro (descricao, valor, data, user_create, metodo_pagamento, tipo, categoria_id)
     	VALUES ('Venda de ${quantidade}Kg de ${material_id === 4 ? "Grão de Plástico Reciplast" : "Sacola de Plástico"}',
-    	$1, $2, $3, $4, 'receita', 1)
+    	$1, $2, $3, $4, 'receita', 4)
     	RETURNING *
     `,
       [Number(valor) * Number(quantidade), data, username, metodo_pagamento]

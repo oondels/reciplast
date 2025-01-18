@@ -294,6 +294,8 @@ router.get("/expenses-history", checkToken, async (req, res, next) => {
 			tipo, SUM(valor) as valor_total_mes, EXTRACT(MONTH FROM data) as mes
 		FROM
 			reciplast.financeiro
+    WHERE
+      EXTRACT(YEAR FROM data) = EXTRACT(YEAR FROM CURRENT_DATE)
 		GROUP BY
 			tipo, EXTRACT(MONTH FROM data)
 		ORDER BY
@@ -358,7 +360,7 @@ router.get("/detailed-sell-history", checkToken, async (req, res, next) => {
 			LEFT JOIN
 				reciplast.produtos p ON e.material_id = p.id
 			WHERE
-				EXTRACT(YEAR FROM e.data) = EXTRACT(YEAR FROM CURRENT_DATE) AND
+				(EXTRACT(YEAR FROM e.data) = EXTRACT(YEAR FROM CURRENT_DATE)) AND
 				e.material_id = 3 OR e.material_id = 4 AND e.saida = true
 			GROUP BY
 				EXTRACT(MONTH FROM e.data), e.saida, p.nome

@@ -2,6 +2,7 @@ Fardo da sacola é 20kg
 
 Feito
 colocar opção de tamanho de sacola ao realizar um pedido
+
 Feito
 sacola
 p = 30x40

@@ -16,16 +16,16 @@ router.get("/get-estoque", checkToken, async (req, res, next) => {
     if (id) params.push(id);
 
     let query = `
-		SELECT 
+		SELECT
 			p.nome,
-			SUM(e.quantidade) AS quantidade, SUM(e.total_custo) AS custo_total 
+			SUM(e.quantidade) AS quantidade, SUM(e.total_custo) AS custo_total
 			${fornecedor ? ", e.fornecedor" : ""}
 			${data ? ", e.data" : ""}`;
 
     query += `
 			FROM reciplast.produtos p
 			LEFT JOIN reciplast.estoque e ON p.id = e.material_id
-			WHERE ${id ? "p.id = $1 AND" : ""} ${type === "compra" ? "entrada" : "saida"} = true 
+			WHERE ${id ? "p.id = $1 AND" : ""} ${type === "compra" ? "entrada" : "saida"} = true
 			GROUP BY p.nome ${fornecedor ? ", e.fornecedor" : ""} ${data ? ", e.data" : ""}`;
 
     const result = await pool.query(query, params);
@@ -40,8 +40,8 @@ router.get("/get-estoque", checkToken, async (req, res, next) => {
 router.get("/get-produtos", checkToken, async (req, res, next) => {
   try {
     const query = await pool.query(`
-			SELECT 
-				p.nome, p.id, p.type, SUM(CASE WHEN e.entrada = true THEN e.quantidade ELSE 0 END) - 
+			SELECT
+				p.nome, p.id, p.type, SUM(CASE WHEN e.entrada = true THEN e.quantidade ELSE 0 END) -
 				SUM(CASE WHEN e.saida = true THEN e.quantidade ELSE 0 END) AS quantidade
 			FROM
 				reciplast.produtos p
@@ -59,55 +59,49 @@ router.get("/get-produtos", checkToken, async (req, res, next) => {
 
 router.post("/post-produto-estoque", checkToken, async (req, res, next) => {
   try {
-    let {
-      material_id,
-      quantidade,
-      unidade,
-      entrada,
-      saida,
-      data,
-      custo_compra,
-      custo_venda,
-      fornecedor,
-      username,
-    } = req.body;
+    let { material_id, quantidade, unidade, entrada, saida, data, custo_compra, custo_venda, fornecedor, username } =
+      req.body;
 
     const queryMaterial = await pool.query(
       `
 			SELECT * FROM reciplast.produtos
-			WHERE id = $1	
+			WHERE id = $1
 		`,
       [material_id]
     );
 
     // Atualizar estoque Plástico Após Produção de Fardos de Sacola/Grão
-    if (material_id === 3 || material_id === 4) {
+    if (material_id === 1 || material_id === 4) {
       const estoquePlastico = await pool.query(`
-				SELECT 
-					SUM(case when entrada then quantidade else 0 end) - 
-					SUM(case when saida then quantidade else 0 end) AS "quantidade" 
+				SELECT
+					SUM(case when entrada then quantidade else 0 end) -
+					SUM(case when saida then quantidade else 0 end) AS "quantidade"
 				FROM
 					reciplast.estoque
-				WHERE 
-					material_id = 2
+				WHERE
+					material_id = 3
 			`);
-			
+
       if (Number(estoquePlastico.rows[0].quantidade) < Number(quantidade)) {
-        return res
-          .status(400)
-          .json({ message: "Quantidade de plástico insuficiente para produção de fardos. Atualize o Estoque, caso não tenha feito." });
+        return res.status(400).json({
+          message:
+            "Quantidade de plástico insuficiente para produção de fardos. Atualize o Estoque, caso não tenha feito.",
+        });
       }
 
-			const updatePlastico = await pool.query(`
-				INSERT INTO reciplast.estoque 
+      const updatePlastico = await pool.query(
+        `
+				INSERT INTO reciplast.estoque
 					(material_id, quantidade, unidade, entrada, saida, data, username, fornecedor, created_at, updated_at)
-				VALUES (2, $1, 'KG', false, true, $2, $3, 'Produção de Material', NOW(), NOW())
+				VALUES (3, $1, 'KG', false, true, $2, $3, 'Produção de Material', NOW(), NOW())
 				RETURNING *
-			`, [quantidade, data, username]);
+			`,
+        [quantidade, data, username]
+      );
 
-			if(updatePlastico.rows.length === 0) {
-				return res.status(400).json({ message: "Erro ao atualizar estoque. Tente novamente." });
-			}
+      if (updatePlastico.rows.length === 0) {
+        return res.status(400).json({ message: "Erro ao atualizar estoque. Tente novamente." });
+      }
     }
 
     // Atualizar financeiro
@@ -139,7 +133,7 @@ router.post("/post-produto-estoque", checkToken, async (req, res, next) => {
     }
 
     const postMaterial = await pool.query(
-      `INSERT INTO reciplast.estoque 
+      `INSERT INTO reciplast.estoque
 			(material_id, quantidade, unidade, entrada, saida, data, custo_compra, custo_venda, fornecedor, username, total_custo, created_at, updated_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW())
 			RETURNING *`,
@@ -206,7 +200,7 @@ router.post("/post-residuo", checkToken, async (req, res, next) => {
     );
 
     const insertResiduo = await pool.query(
-      `INSERT INTO reciplast.residuo 
+      `INSERT INTO reciplast.residuo
       (produto_id, quantidade, descricao, data, user_create)
       VALUES ($1, $2, $3, NOW(), $4)
       RETURNING *`,
@@ -214,14 +208,10 @@ router.post("/post-residuo", checkToken, async (req, res, next) => {
     );
 
     if (insertResiduo.rows.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Erro ao Inserir Resíduo, verifique as informações e tente novamente." });
+      return res.status(400).json({ message: "Erro ao Inserir Resíduo, verifique as informações e tente novamente." });
     }
 
-    res
-      .status(201)
-      .json({ message: `Resíduo de ${fetchProduto.rows[0].nome} inserido com sucesso.` });
+    res.status(201).json({ message: `Resíduo de ${fetchProduto.rows[0].nome} inserido com sucesso.` });
   } catch (error) {
     next(error);
   }
@@ -233,7 +223,7 @@ router.post("/post-produto", checkToken, async (req, res, next) => {
     const { nome, tag, type, user_create } = req.body;
 
     const insertProduto = await pool.query(
-      `INSERT INTO reciplast.produtos 
+      `INSERT INTO reciplast.produtos
       (nome, tag, type, user_create, created_at, updated_at)
       VALUES ($1, $2, $3, $4, NOW(), NOW())
       RETURNING *`,
@@ -241,9 +231,7 @@ router.post("/post-produto", checkToken, async (req, res, next) => {
     );
 
     if (insertProduto.rows.length === 0) {
-      return res
-        .status(400)
-        .json({ message: "Erro ao Cadastrar Produto. Verifique as informações e tente novamente" });
+      return res.status(400).json({ message: "Erro ao Cadastrar Produto. Verifique as informações e tente novamente" });
     }
 
     res.status(201).json(insertProduto.rows[0]);
@@ -259,10 +247,10 @@ router.get("/fardo-produto/:id", checkToken, async (req, res, next) => {
 
     const query = await pool.query(
       `
-				SELECT 
-					producao::TEXT[] 
-				FROM 
-					reciplast.produtos 
+				SELECT
+					producao::TEXT[]
+				FROM
+					reciplast.produtos
 				WHERE
 					id = $1
 			`,
@@ -301,19 +289,18 @@ router.put("/fardo-produto/:id", checkToken, async (req, res, next) => {
 
 // Fornecedores
 router.get("/get-fornecedores", checkToken, async (req, res, next) => {
-	try {
-		const query = await pool.query(`
-			SELECT fornecedor 
+  try {
+    const query = await pool.query(`
+			SELECT fornecedor
 			FROM reciplast.estoque
 			WHERE fornecedor != 'Produção Interna' AND entrada = true
 			GROUP BY fornecedor
-		`)
+		`);
 
-		return res.status(200).json(query.rows);
-	} catch (error) {
-		next(error);
-		
-	}
-})
+    return res.status(200).json(query.rows);
+  } catch (error) {
+    next(error);
+  }
+});
 
 export default router;

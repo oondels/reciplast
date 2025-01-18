@@ -14,18 +14,18 @@ router.post("/post-financeiro", checkToken, async (req, res, next) => {
     if (categoria === "Manutenção") params.push(req.body.maintenanceService);
 
     let query = `
-    INSERT INTO reciplast.financeiro (tipo, categoria_id, descricao, valor, data, metodo_pagamento, user_create
-    ${categoria === "Salários" ? ", nome_funcionario" : ""}
-    ${categoria === "Manutenção" ? ", servico_manutencao" : ""}
-    )
-    VALUES ($1, $2, $3, $4, $5, $6, $7
-    ${categoria === "Salários" ? ", $8" : ""}
-    ${categoria === "Manutenção" ? ", $8" : ""})
-    RETURNING *
+      INSERT INTO reciplast.financeiro (tipo, categoria_id, descricao, valor, data, metodo_pagamento, user_create
+      ${categoria === "Salários" ? ", nome_funcionario" : ""}
+      ${categoria === "Manutenção" ? ", servico_manutencao" : ""}
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7
+      ${categoria === "Salários" ? ", $8" : ""}
+      ${categoria === "Manutenção" ? ", $8" : ""})
+      RETURNING *
     `;
 
     // Verificar se é compra de materia prima para atualizar estoque
-    if (categoria_id === 2) {
+    if (categoria_id === 3) {
       const updateEstqueMateriaPrima = await pool.query(
         `
     		INSERT INTO reciplast.estoque
@@ -73,7 +73,7 @@ router.get("/fetch-maintenance-services", async (req, res, next) => {
     const services = await pool.query(`
       SELECT servico_manutencao
       FROM reciplast.financeiro
-      WHERE categoria_id = 5
+      WHERE categoria_id = 2
       ORDER BY servico_manutencao
       ASC
     `);

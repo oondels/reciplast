@@ -23,11 +23,7 @@
                 class="bg-success d-flex justify-content-between align-items-center rounded text-white text-center text-bold m-3"
               >
                 Login
-                <i
-                  class="mdi mdi-close-circle fs-3"
-                  role="button"
-                  @click="isActive.value = false"
-                ></i>
+                <i class="mdi mdi-close-circle fs-3" role="button" @click="isActive.value = false"></i>
               </v-card-title>
 
               <v-card-text>
@@ -69,9 +65,7 @@
 
                   <v-dialog max-width="400">
                     <template v-slot:activator="{ props: activatorProps }">
-                      <span class="m-0 text-danger" role="button" v-bind="activatorProps">
-                        Recuperar
-                      </span>
+                      <span class="m-0 text-danger" role="button" v-bind="activatorProps"> Recuperar </span>
                     </template>
 
                     <template v-slot:default="{ isActive }">
@@ -80,11 +74,7 @@
                           class="bg-danger d-flex justify-content-between align-items-center rounded text-white text-center text-bold m-3"
                         >
                           Recuperar Senha
-                          <i
-                            class="mdi mdi-close-circle fs-3"
-                            role="button"
-                            @click="isActive.value = false"
-                          ></i
+                          <i class="mdi mdi-close-circle fs-3" role="button" @click="isActive.value = false"></i
                         ></v-card-title>
 
                         <v-card-text>
@@ -99,11 +89,7 @@
                           />
 
                           <div v-if="loading" class="d-flex justify-content-center">
-                            <v-progress-circular
-                              indeterminate
-                              :size="90"
-                              :width="6"
-                            ></v-progress-circular>
+                            <v-progress-circular indeterminate :size="90" :width="6"></v-progress-circular>
                           </div>
 
                           <div v-if="validCpf">
@@ -157,11 +143,7 @@
                 class="bg-success d-flex justify-content-between align-items-center rounded text-white text-center text-bold m-3"
               >
                 Sessão Atual
-                <i
-                  class="mdi mdi-close-circle fs-3"
-                  role="button"
-                  @click="isActive.value = false"
-                ></i>
+                <i class="mdi mdi-close-circle fs-3" role="button" @click="isActive.value = false"></i>
               </v-card-title>
 
               <v-card-text>
@@ -264,12 +246,7 @@ export default {
           const token = response.data.token;
           sessionStorage.setItem("token", token);
 
-          this.$refs.alert.mostrarAlerta(
-            "success",
-            "check_circle",
-            "Sucesso",
-            response.data.message
-          );
+          this.$refs.alert.mostrarAlerta("success", "check_circle", "Sucesso", response.data.message);
 
           this.loadingLogin = !this.loadingLogin;
           setTimeout(() => {
@@ -290,13 +267,7 @@ export default {
       axios
         .post(`${ip}/auth/logout`, {}, { withCredentials: true })
         .then((response) => {
-          console.log(response.data.message);
-          this.$refs.alert.mostrarAlerta(
-            "success",
-            "check_circle",
-            "Sucesso",
-            response.data.message
-          );
+          this.$refs.alert.mostrarAlerta("success", "check_circle", "Sucesso", response.data.message);
 
           setTimeout(() => {
             window.location.reload();
@@ -322,24 +293,14 @@ export default {
           .catch((error) => {
             this.loading = !this.loading;
             console.error("Erro ao verificar cpf", error);
-            this.$refs.alert.mostrarAlerta(
-              "warning",
-              "warning",
-              "Erro",
-              error.response.data.message
-            );
+            this.$refs.alert.mostrarAlerta("warning", "warning", "Erro", error.response.data.message);
           });
       }
     },
 
     recoverPassword() {
       if (!this.newPassword || !this.repeatNewPassword || !this.recoverCpf) {
-        return this.$refs.alert.mostrarAlerta(
-          "warning",
-          "warning",
-          "Erro",
-          "Preencha todos os campos"
-        );
+        return this.$refs.alert.mostrarAlerta("warning", "warning", "Erro", "Preencha todos os campos");
       }
 
       this.loadingNewPassword = !this.loadingNewPassword;
@@ -351,12 +312,7 @@ export default {
         })
         .then((response) => {
           this.loadingNewPassword = !this.loadingNewPassword;
-          this.$refs.alert.mostrarAlerta(
-            "success",
-            "check_circle",
-            "Sucesso",
-            response.data.message
-          );
+          this.$refs.alert.mostrarAlerta("success", "check_circle", "Sucesso", response.data.message);
 
           setTimeout(() => {
             window.location.reload();

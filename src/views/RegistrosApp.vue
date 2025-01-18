@@ -5,7 +5,6 @@
       <Info
         :infoDescription="'Registro da produção de fardos do produto selecionado (Sacola de Plástico ou Grãos). O registro atualiza automaticamente o estoque do produto final e dos materiais utilizados no processo de fabricação.'"
       />
-
       <div class="register" v-for="produto in produtosProducao()" :key="produto.id">
         <p class="p-2 alert alert-primary rounded">Produção de {{ produto.nome }}</p>
 
@@ -87,7 +86,7 @@
               </v-col>
 
               <!-- Só exibe se for pedido de sacola -->
-              <v-col v-if="this.pedido.produto === 3" class="m-0">
+              <v-col v-if="this.pedido.produto === 1" class="m-0">
                 <v-select
                   v-model="pedido.tamanho"
                   label="Tamanho da Sacola"
@@ -120,7 +119,7 @@
             <div class="col-12 d-flex flex-row flex-wrap">
               <!-- Sacola de Plástico -->
               <v-select
-                v-if="pedido.produto && pedido.produto === 3"
+                v-if="pedido.produto && pedido.produto === 1"
                 class="col-12 col-md-6 mb-2"
                 v-model="pedido.quantidade"
                 variant="outlined"
@@ -255,8 +254,8 @@
 
         <div class="col-12 d-flex flex-row flex-wrap">
           <v-combobox
-            class="col-12 col-md-6 mb-2"
             v-if="categoriasFinancerio"
+            class="col-12 col-md-6 mb-2"
             :items="categoriasFinancerio"
             item-value="id"
             item-title="categoria"
@@ -299,21 +298,26 @@
             :rules="rules"
           />
 
-          <v-text-field
-            v-if="
-              (categoriaFinancerioSelecionada &&
-                categoriaFinancerioSelecionada.categoria === 'Manutenção' &&
-                newService) ||
-              maintenanceServices.length === 0
-            "
-            label="Novo Serviço Realizado"
-            v-model="selectedService"
-            variant="solo-filled"
-            color="success"
+          <div
             class="col-md-6 mb-2"
-            required
-            :rules="rules"
-          />
+            v-if="categoriaFinancerioSelecionada && categoriaFinancerioSelecionada.categoria === 'Manutenção'"
+          >
+            <v-text-field
+              v-if="
+                (categoriaFinancerioSelecionada &&
+                  categoriaFinancerioSelecionada.categoria &&
+                  categoriaFinancerioSelecionada.categoria === 'Manutenção' &&
+                  newService) ||
+                maintenanceServices.length === 0
+              "
+              label="Novo Serviço Realizado"
+              v-model="selectedService"
+              variant="solo-filled"
+              color="success"
+              required
+              :rules="rules"
+            />
+          </div>
 
           <v-checkbox
             class="col-12"
@@ -583,9 +587,13 @@ export default {
 
     fecthFardoSacola() {
       axios
-        .get(`${ip}/estoque/fardo-produto/3`, { withCredentials: true })
+        .get(`${ip}/estoque/fardo-produto/1`, { withCredentials: true })
         .then((response) => {
-          this.fardoSacola = response.data[0].producao;
+          if (response.data && response.data[0].producao) {
+            console.log(`Fardo Sacola: ${response.data[0].producao}`);
+
+            this.fardoSacola = response.data[0].producao;
+          }
         })
         .catch((error) => {
           console.error("Erro ao consultar fardos: ", error);
@@ -596,7 +604,11 @@ export default {
       axios
         .get(`${ip}/estoque/fardo-produto/4`, { withCredentials: true })
         .then((response) => {
-          this.fardoGrao = response.data[0].producao;
+          if (response.data && response.data[0].producao) {
+            console.log(`Fardo Grão: ${response.data[0].producao}`);
+
+            this.fardoGrao = response.data[0].producao;
+          }
         })
         .catch((error) => {
           console.error("Erro ao consultar fardos: ", error);
@@ -612,7 +624,6 @@ export default {
             this.produtoEstoque[produto.nome] = produto.quantidade;
             this.produtosNome.push(produto.nome);
           });
-          console.log(this.produtosNome);
         })
         .catch((error) => {
           console.error("Erro ao consultar produtos: ", error);
@@ -813,7 +824,7 @@ export default {
         metodo_pagamento: this.pedido.metodo_pagamento,
         valor: this.pedido.valor,
         // Verificando se o pedido é de uma sacola, para adicionar o tamanho
-        tamanho: this.pedido.produto === 3 ? this.pedido.tamanho : null,
+        tamanho: this.pedido.produto === 1 ? this.pedido.tamanho : null,
       };
 
       this.loadingPedido = !this.loadingPedido;
@@ -866,6 +877,8 @@ export default {
       axios
         .get(`${ip}/financeiro/fetch-maintenance-services`)
         .then((response) => {
+          console.log(response.data);
+
           response.data.forEach((service) => {
             if (service.servico_manutencao) this.maintenanceServices.push(service.servico_manutencao);
           });

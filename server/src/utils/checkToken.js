@@ -7,7 +7,7 @@ const checkToken = (req, res, next) => {
   }
 
   jwt.verify(token, process.env.JWT_SECRET, (error, user) => {
-    if (error) return res.status(403).json({ message: "Invalid session. Invalid Token" });
+    if (error) return res.status(403).json({ message: "Sessão Inválida. Faça Login novamente." });
 
     req.user = user;
     next();

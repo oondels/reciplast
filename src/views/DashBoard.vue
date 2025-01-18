@@ -104,7 +104,7 @@
 
     <div class="charts-container">
       <h3 class="dashboard-title">Produção Mensal</h3>
-      <div class="min-charts-fardo space">
+      <div v-if="producaoMensal && producaoMensal.length" class="min-charts-fardo space">
         <div v-for="producao in producaoMensal" :key="producao.id" class="chart-item">
           <div class="production-card">
             <div class="icon">
@@ -122,8 +122,15 @@
         </div>
       </div>
 
+      <div v-else class="min-charts-fardo space shadow p-3 rounded-lg bg-white">
+        <span class="mt-3 d-flex flex-row justify-content-center">
+          <i class="mdi mdi-database-off mr-2 fs-5 text-primary"></i>
+          <h5>Sem Dados no Sistema...</h5>
+        </span>
+      </div>
+
       <h4 class="dashboard-title">Armazenamento Geral</h4>
-      <div class="min-charts space">
+      <div v-if="estoqueIndividual && estoqueIndividual.length" class="min-charts space">
         <div
           v-for="(material, materialIndex) in estoqueIndividual"
           :key="materialIndex"
@@ -180,6 +187,13 @@
         </div>
       </div>
 
+      <div v-else class="min-charts-fardo space shadow p-3 rounded-lg bg-white">
+        <span class="mt-3 d-flex flex-row justify-content-center">
+          <i class="mdi mdi-database-off mr-2 fs-5 text-primary"></i>
+          <h5>Sem Dados no Sistema...</h5>
+        </span>
+      </div>
+
       <v-divider :thickness="2" class="border-opacity-25" color="success"></v-divider>
 
       <h4 class="dashboard-title space">Análise Geral</h4>
@@ -192,8 +206,15 @@
             <h4>Estoque Geral</h4>
           </span>
 
-          <div v-if="estoqueGeralOp && estoqueGeralSeries">
+          <div v-if="estoqueGeralOp && estoqueGeralSeries && estoqueGeralOp.xaxis.categories.length > 0">
             <ApexChart :options="estoqueGeralOp" :series="estoqueGeralSeries" :type="'bar'" />
+          </div>
+
+          <div v-else>
+            <span class="mt-3 d-flex flex-row justify-content-center">
+              <i class="mdi mdi-database-off mr-2 fs-5 text-primary"></i>
+              <h5>Sem Dados no Sistema...</h5>
+            </span>
           </div>
         </div>
 
@@ -206,13 +227,28 @@
                   <h4>Receita X Despesa R$</h4>
                 </span>
 
-                <div v-if="generalExpensesData && generalExpensesData.options && generalExpensesData.series">
+                <div
+                  v-if="
+                    generalExpensesData &&
+                    generalExpensesData.options &&
+                    generalExpensesData.series &&
+                    generalExpensesData.series[0] != 0 &&
+                    generalExpensesData.series[1] != 0
+                  "
+                >
                   <ApexCharts
                     max-width="400"
                     :options="generalExpensesData.options"
                     :series="generalExpensesData.series"
                     type="donut"
                   />
+                </div>
+
+                <div class="mt-3" v-else>
+                  <span class="mt-3 d-flex flex-row justify-content-center">
+                    <i class="mdi mdi-database-off mr-2 fs-5 text-primary"></i>
+                    <h5>Sem Dados no Sistema...</h5>
+                  </span>
                 </div>
               </div>
             </template>
@@ -252,7 +288,12 @@
               v-bind="activatorProps"
               role="button"
               @click="detailedSellHistory"
-              v-if="expensesHistoryData && expensesHistoryData.options && expensesHistoryData.series"
+              v-if="
+                expensesHistoryData &&
+                expensesHistoryData.options &&
+                expensesHistoryData.result &&
+                expensesHistoryData.result.length > 0
+              "
               class="chart-item chart-item-details d-flex flex-column justify-content-center align-items-center"
             >
               <span class="d-flex flex-row justify-content-between align-items-center">
@@ -266,6 +307,21 @@
                 :options="expensesHistoryData.options"
                 :series="expensesHistoryData.series"
               />
+            </div>
+
+            <div
+              v-else
+              class="chart-item chart-item-details d-flex flex-column justify-content-center align-items-center"
+            >
+              <span class="d-flex flex-row justify-content-center align-items-center">
+                <i class="mdi mdi-currency-usd fs-4 text-primary"></i>
+                <h4>Despesa X Receita - Por Mês R$</h4>
+              </span>
+
+              <span class="mt-3 d-flex flex-row justify-content-center">
+                <i class="mdi mdi-database-off mr-2 fs-5 text-primary"></i>
+                <h5>Sem Dados no Sistema...</h5>
+              </span>
             </div>
           </template>
 
@@ -308,8 +364,15 @@
             <h4>Fabricação de Sacolas e Grão (Kg)</h4>
           </span>
 
-          <div v-if="productionHistoryData && productionHistoryData.options && productionHistoryData.series">
+          <div v-if="productionHistoryData && productionHistoryData.series && productionHistoryData.series.length">
             <ApexChart type="bar" :options="productionHistoryData.options" :series="productionHistoryData.series" />
+          </div>
+
+          <div class="mt-3" v-else>
+            <span class="mt-3 d-flex flex-row justify-content-center">
+              <i class="mdi mdi-database-off mr-2 fs-5 text-primary"></i>
+              <h5>Sem Dados no Sistema...</h5>
+            </span>
           </div>
         </div>
 
@@ -319,12 +382,19 @@
             <h4>Sacolas X Grão (Kg)</h4>
           </span>
 
-          <div v-if="productionHistoryData && productionHistoryData.donut">
+          <div v-if="productionHistoryData && productionHistoryData.donut && productionHistoryData.donut.series.length">
             <ApexChart
               type="donut"
               :options="productionHistoryData.donut.options"
               :series="productionHistoryData.donut.series"
             />
+          </div>
+
+          <div class="mt-3" v-else>
+            <span class="mt-3 d-flex flex-row justify-content-center">
+              <i class="mdi mdi-database-off mr-2 fs-5 text-primary"></i>
+              <h5>Sem Dados no Sistema...</h5>
+            </span>
           </div>
         </div>
       </div>
@@ -463,7 +533,6 @@ export default {
         .get(`${ip}/chart/producao-mensal`, { withCredentials: true })
         .then((response) => {
           this.producaoMensal = response.data;
-          console.log(this.producaoMensal);
         })
         .catch((error) => {
           console.error("Erro ao buscar dados de produção mensal: ", error);
@@ -566,8 +635,6 @@ export default {
         Estoque: `${ip}/report/estoque/`,
         Manutencao: `${ip}/report/manutencao/`,
       };
-
-      console.log(this.reportData);
 
       this.loadingReport = !this.loadingReport;
       axios
