@@ -1,3 +1,3 @@
-const ip = "http://localhost:2399"
+const ip = "https://reciplast-server.vercel.app";
 
 export default ip;
